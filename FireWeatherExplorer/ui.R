@@ -9,28 +9,40 @@
 
 library(shiny)
 
-# Define UI for application that draws a histogram
-shinyUI(fluidPage(
-  
-  # Application title
-  titlePanel("Old Faithful Geyser Data"),
-  
-  # Sidebar with a slider input for number of bins 
-  sidebarLayout(
-    sidebarPanel(
-       sliderInput("bins",
-                   "Number of bins:",
-                   min = 1,
-                   max = 50,
-                   value = 30)
-    ),
-    
-    # Show a plot of the generated distribution
-    mainPanel(
-       plotOutput("distPlot")
-    )
-  )
+
+navbarPage("Fire Weather Explorer",
+           tabPanel("Station Selection",
+                    sidebarLayout(
+                      sidebarPanel(
+                        dateRangeInput('dateRange',
+                                       label = 'Date range input: yyyy-mm-dd',
+                                       start = Sys.Date() - 2, end = Sys.Date() + 2),
+                        sliderInput("months",
+                                    "Months to use:",
+                                    min = 1,
+                                    max = 12, value = c(9,12))),
+                      mainPanel(
+                        plotOutput("temp_ts_plot"))
+           )),
+           tabPanel("Station Diagnostics",
+                    sidebarLayout(
+                      sidebarPanel(),mainPanel())
+                    ),
+           tabPanel("Subset Plots",
+                      sidebarLayout(
+                        sidebarPanel(
+                          sliderInput("rh",
+                                      "Relative Humidity:",
+                                      min = 1,
+                                      max = 100,
+                                      value = c(15,35)),
+                          checkboxGroupInput("wind_directions", "Wind Directions:",
+                                             levels(wx_df$Wind_Direction))
+                        ),
+                        mainPanel(plotOutput("rhplot")))
+                    )
 )
-)
+
+
 
 

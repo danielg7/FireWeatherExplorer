@@ -1,16 +1,49 @@
-#library("devtools")
-#install_github(repo = "fickse/mesowest")
+# Install mesowest package
+# library("devtools")
+# install_github(repo = "fickse/mesowest")
+
+
+# Packages ----------------------------------------------------------------
 
 library("mesowest")
 library("lubridate")
 
 
-requestToken(apikey = "KzUeoUZBhy7Sk3m4mBJaHHKRdkpMv1py2zc")
+# Read in API Key for Mesowest --------------------------------------------
+
+fileName <- 'api_key.txt'
+api_key <- readChar(fileName, file.info(fileName)$size)
+
+requestToken(apikey = api_key)
+
+# Read in Stations --------------------------------------------------------
 
 StationName <- "TS582"
 
-wx_dl <- mw(service = 'timeseries', stid=StationName, start = "201101011200", end = "201712312359", units="ENGLISH")
 
+# Read In Station Data ----------------------------------------------------
+
+readInWeather <- function(StationID, Start, End)
+{
+downloadedWeather <- mesowest::mw(service = 'timeseries',
+            stid=StationID,
+            start = Start,
+            end = End,
+            units="ENGLISH")
+
+return(downloadedWeather)
+}
+
+wxStationMetadata <- function(StationID){
+  metadata <- mw(service = 'metadata', stid = StationID, complete = 1)
+  return(metadata)
+}
+
+stationMetadata <- wxStationMetadata("TS582")
+
+wx_dl <- readInWeather(StationID = StationName,
+              Start = "201101011200",
+              End = "201712312359")
 
 
 wx_df <- data.frame("dt" = wx_dl$STATION$OBSERVATIONS$date_time,

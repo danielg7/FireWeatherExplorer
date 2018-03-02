@@ -7,8 +7,11 @@
 #    http://shiny.rstudio.com/
 #
 
-library(shiny)
-library(ggplot2)
+library("shiny")
+library("ggplot2")
+library("dplyr")
+library("DT")
+
 
 source("RawsDL.R")
 
@@ -21,7 +24,7 @@ server <- function(input, output) {
       scale_x_date("Day of the Year", labels = function(x) format(x, "%d-%b"))+
       scale_y_continuous("Temperature (F)")+
       labs(title = "Temperature Records",
-           subtitle = paste(StationName,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+           subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
       facet_grid(facets = Year ~ .)+
       theme_minimal()
     tempPlot
