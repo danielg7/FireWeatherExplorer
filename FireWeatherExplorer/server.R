@@ -25,9 +25,11 @@ server <- function(input, output, session) {
                            Start = "201101011200",
                            End = "201712312359")
     
+    stationMetadata <- wxStationMetadata(StationID = StationID)
+    
     if(wx_dl$SUMMARY$NUMBER_OF_OBJECTS == 0){
       showNotification("No data in this station for this period of record!")
-      
+
       wx_df <- data.frame("DateTime" = as.Date(NA),
                           "FuelMoisture" = NA,
                           "Wind_Direction" = NA,
@@ -40,13 +42,13 @@ server <- function(input, output, session) {
 
     if(wx_dl$SUMMARY$NUMBER_OF_OBJECTS > 0){
     wx_df <- data.frame("dt" = wx_dl$STATION$OBSERVATIONS$date_time,
-                        "fuel_moisture" = wx_dl$STATION$OBSERVATIONS$fuel_moisture_set_1,
+                       "fuel_moisture" = wx_dl$STATION$OBSERVATIONS$fuel_moisture_set_1,
                         "wind_direction" = wx_dl$STATION$OBSERVATIONS$wind_cardinal_direction_set_1d,
                         "wind_speed" = wx_dl$STATION$OBSERVATIONS$wind_speed_set_1,
                         "temp" = wx_dl$STATION$OBSERVATIONS$air_temp_set_1,
                         "rh" = wx_dl$STATION$OBSERVATIONS$relative_humidity_set_1)
     
-    wx_df[nrow(wx_df)+1,] <- NA
+    #wx_df[nrow(wx_df)+1,1:6] <- NA
     
     names(wx_df) <- c("DateTime","FuelMoisture","Wind_Direction","Wind_Speed","Temp","RH")
     wx_df$DateTime <- ymd_hms(wx_df$DateTime,tz = "UTC")

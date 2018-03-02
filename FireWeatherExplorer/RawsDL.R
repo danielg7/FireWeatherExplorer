@@ -18,7 +18,7 @@ requestToken(apikey = api_key)
 
 # Read in Stations --------------------------------------------------------
 
-Larimer <- mw('metadata',county="Larimer", state="CO")
+Larimer <- mw('metadata',county="Larimer", state="CO", network=2, status='ACTIVE')
 
 # Read In Station Data ----------------------------------------------------
 
@@ -34,7 +34,7 @@ return(downloadedWeather)
 }
 
 wxStationMetadata <- function(StationID){
-  metadata <- mw(service = 'metadata', stid = StationID, complete = 1)
+  metadata <- mw(service = 'metadata', stid = StationID, complete = 1, network = 2)
   return(metadata)
 }
 
