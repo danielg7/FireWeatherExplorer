@@ -51,6 +51,7 @@ server <- function(input, output, session) {
     #wx_df[nrow(wx_df)+1,1:6] <- NA
     
     names(wx_df) <- c("DateTime","FuelMoisture","Wind_Direction","Wind_Speed","Temp","RH")
+    wx_df$RH <- as.numeric(as.character(wx_df$RH))
     wx_df$DateTime <- ymd_hms(wx_df$DateTime,tz = "UTC")
     attributes(wx_df$DateTime)$tzone <- "America/Denver"  
     wx_df$Week <- week(wx_df$DateTime)
@@ -63,6 +64,7 @@ server <- function(input, output, session) {
     output$temp_ts_plot <- renderPlot({
       tempPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = Temp))+
         geom_point(alpha = 0.25)+
+        geom_smooth(color = "red")+
         scale_x_date("Day of the Year", labels = function(x) format(x, "%d-%b"))+
         scale_y_continuous("Temperature (F)")+
         labs(title = "Temperature Records",
@@ -71,6 +73,30 @@ server <- function(input, output, session) {
         theme_minimal()
       tempPlot
     })
+      output$rh_ts_plot <- renderPlot({
+        rhPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = RH/100))+
+          geom_point(alpha = 0.25, size = 0.25)+
+          scale_x_date("Day of the Year",
+                       labels = function(x) format(x, "%d-%b"))+
+            scale_y_continuous("Relative Humidity (%)", labels = scales::percent,limits = c(0,1))+
+          labs(title = "Relative Humidity Records",
+               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+          facet_grid(facets = Year ~ .)+
+          theme_minimal()
+        rhPlot
+    })
+      output$wind_ts_plot <- renderPlot({
+        wsPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = Wind_Speed))+
+          geom_point(alpha = 0.25, size = 0.25)+
+          scale_x_date("Day of the Year",
+                       labels = function(x) format(x, "%d-%b"))+
+          scale_y_continuous("Wind Speed (mph)")+
+          labs(title = "Wind Speed Records",
+               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+          facet_grid(facets = Year ~ .)+
+          theme_minimal()
+        wsPlot
+      })
   })
   
   

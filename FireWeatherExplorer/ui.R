@@ -23,8 +23,10 @@ navbarPage("Fire Weather Explorer",
                         actionButton("pickStations", "Submit")
                         ),
                       mainPanel(
-                        plotOutput("temp_ts_plot"))
-           )),
+                        plotOutput("temp_ts_plot"),
+                        plotOutput("rh_ts_plot"),
+                        plotOutput("wind_ts_plot")
+           ))),
            tabPanel("Station Diagnostics",
                     sidebarLayout(
                       sidebarPanel(),mainPanel())
