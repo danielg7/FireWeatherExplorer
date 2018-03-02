@@ -14,13 +14,14 @@ navbarPage("Fire Weather Explorer",
            tabPanel("Station Selection",
                     sidebarLayout(
                       sidebarPanel(
+                        selectInput('station',
+                                    label = "Select Station",
+                                    choices = Larimer$STATION$NAME),
                         dateRangeInput('dateRange',
                                        label = 'Date range input: yyyy-mm-dd',
                                        start = Sys.Date() - 2, end = Sys.Date() + 2),
-                        sliderInput("months",
-                                    "Months to use:",
-                                    min = 1,
-                                    max = 12, value = c(9,12))),
+                        actionButton("pickStations", "Submit")
+                        ),
                       mainPanel(
                         plotOutput("temp_ts_plot"))
            )),
@@ -31,6 +32,10 @@ navbarPage("Fire Weather Explorer",
            tabPanel("Subset Plots",
                       sidebarLayout(
                         sidebarPanel(
+                          sliderInput("months",
+                                      "Months to use:",
+                                      min = 1,
+                                      max = 12, value = c(9,12)),
                           sliderInput("rh",
                                       "Relative Humidity:",
                                       min = 1,
