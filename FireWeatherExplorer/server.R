@@ -15,8 +15,12 @@ library("DT")
 
 source("RawsDL.R")
 
+wx_df <- NULL
+wx_dl <- NULL
+
 server <- function(input, output, session) {
   
+  # Station Diagnostics Plots -----------------------------------------------  
   observeEvent(input$pickStations, {
     
     StationID <- Larimer$STATION$STID[which(Larimer$STATION$NAME == input$station)]
@@ -27,10 +31,10 @@ server <- function(input, output, session) {
     EndDate_unformatted <- as.Date(input$dateRange[2], origin = "1970-01-01")
     EndDate_formatted <- paste(format(EndDate_unformatted, "%Y%m%d"),"2300",sep = "")
     
-    showNotification(paste("Searching for:",StartDate_formatted,"-",EndDate_formatted,sep=""))
+    showNotification(paste("Searching for:\n",StartDate_formatted," - ",EndDate_formatted,sep=""))
     
     
-    wx_dl <- readInWeather(StationID = StationID,
+    wx_dl <<- readInWeather(StationID = StationID,
                            Start = StartDate_formatted,
                            End = EndDate_formatted)
     
@@ -39,7 +43,7 @@ server <- function(input, output, session) {
     if(wx_dl$SUMMARY$NUMBER_OF_OBJECTS == 0){
       showNotification(paste("No data in this station for this period of record!",StartDate_formatted,"-",EndDate_formatted,sep=""))
 
-      wx_df <- data.frame("DateTime" = as.Date(NA),
+      wx_df <<- data.frame("DateTime" = as.Date(NA),
                           "FuelMoisture" = NA,
                           "Wind_Direction" = NA,
                           "Wind_Speed" = NA,
@@ -50,7 +54,7 @@ server <- function(input, output, session) {
     }
 
     if(wx_dl$SUMMARY$NUMBER_OF_OBJECTS > 0){
-    wx_df <- data.frame("dt" = wx_dl$STATION$OBSERVATIONS$date_time,
+    wx_df <<- data.frame("dt" = wx_dl$STATION$OBSERVATIONS$date_time,
                        "fuel_moisture" = wx_dl$STATION$OBSERVATIONS$fuel_moisture_set_1,
                         "wind_direction" = wx_dl$STATION$OBSERVATIONS$wind_cardinal_direction_set_1d,
                         "wind_speed" = wx_dl$STATION$OBSERVATIONS$wind_speed_set_1,
@@ -59,16 +63,15 @@ server <- function(input, output, session) {
     
     #wx_df[nrow(wx_df)+1,1:6] <- NA
     
-    names(wx_df) <- c("DateTime","FuelMoisture","Wind_Direction","Wind_Speed","Temp","RH")
-    wx_df$RH <- as.numeric(as.character(wx_df$RH))
-    wx_df$DateTime <- ymd_hms(wx_df$DateTime,tz = "UTC")
-    attributes(wx_df$DateTime)$tzone <- "America/Denver"  
-    wx_df$Week <- week(wx_df$DateTime)
-    wx_df$Month <- month(wx_df$DateTime)
-    wx_df$Year <- year(wx_df$DateTime)
+    names(wx_df) <<- c("DateTime","FuelMoisture","Wind_Direction","Wind_Speed","Temp","RH")
+    wx_df$RH <<- as.numeric(as.character(wx_df$RH))
+    wx_df$DateTime <<- ymd_hms(wx_df$DateTime,tz = "UTC")
+    attributes(wx_df$DateTime)$tzone <<- "America/Denver"  
+    wx_df$Hour <<- hour(wx_df$DateTime)
+    wx_df$Month <<- month(wx_df$DateTime)
+    wx_df$Year <<- year(wx_df$DateTime)
     
-    wx_df$DayOfYear <- as.Date(paste("2000-",format(wx_df$Date, "%j")), "%Y-%j")
-    }
+    wx_df$DayOfYear <<- as.Date(paste("2000-",format(wx_df$Date, "%j")), "%Y-%j")
     
     output$temp_ts_plot <- renderPlot({
       tempPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = Temp))+
@@ -81,49 +84,101 @@ server <- function(input, output, session) {
         theme_minimal()
       tempPlot
     })
-      output$rh_ts_plot <- renderPlot({
-        rhPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = RH/100))+
-          geom_point(alpha = 0.25, size = 0.25)+
-          scale_x_date("Day of the Year",
-                       labels = function(x) format(x, "%d-%b"))+
-            scale_y_continuous("Relative Humidity (%)", labels = scales::percent,limits = c(0,1))+
-          labs(title = "Relative Humidity Records",
-               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-          facet_grid(facets = Year ~ .)+
-          theme_minimal()
-        rhPlot
+    output$rh_ts_plot <- renderPlot({
+      rhPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = RH/100))+
+        geom_point(alpha = 0.25, size = 0.25)+
+        scale_x_date("Day of the Year",
+                     labels = function(x) format(x, "%d-%b"))+
+        scale_y_continuous("Relative Humidity (%)", labels = scales::percent,limits = c(0,1))+
+        labs(title = "Relative Humidity Records",
+             subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+        facet_grid(facets = Year ~ .)+
+        theme_minimal()
+      rhPlot
     })
-      output$wind_ts_plot <- renderPlot({
-        wsPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = Wind_Speed))+
-          geom_point(alpha = 0.25, size = 0.25)+
-          scale_x_date("Day of the Year",
-                       labels = function(x) format(x, "%d-%b"))+
-          scale_y_continuous("Wind Speed (mph)")+
-          labs(title = "Wind Speed Records",
-               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-          facet_grid(facets = Year ~ .)+
-          theme_minimal()
-        wsPlot
-      })
+    output$wind_ts_plot <- renderPlot({
+      wsPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = Wind_Speed))+
+        geom_point(alpha = 0.25, size = 0.25)+
+        scale_x_date("Day of the Year",
+                     labels = function(x) format(x, "%d-%b"))+
+        scale_y_continuous("Wind Speed (mph)")+
+        labs(title = "Wind Speed Records",
+             subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+        facet_grid(facets = Year ~ .)+
+        theme_minimal()
+      wsPlot
+    })
+    }
+    
+
   })
   
-  
-  
-  output$rhplot <- renderPlot({
-    # Subset based on months
+  # Subset Data Plots -----------------------------------------------
+  observeEvent(input$subsetData, {
     wx_sub <- wx_df %>%
       filter(Month >= input$months[1]) %>%
       filter(Month <= input$months[2]) %>%
-      filter(RH >= input$rh[1] & RH <= input$rh[2])
+      filter(RH >= input$rh[1] & RH <= input$rh[2]) %>%
+      filter(Wind_Direction %in% input$wind_directions) %>%
+      filter(Hour >= input$hours[1] & Hour <= input$hours[2]) %>%
+      mutate(Conditions = "Matching")
     
-    # draw the histogram with the specified number of bins
-    histPlot <- ggplot(data = wx_sub, aes(x = Month, y = RH))+
-      geom_bar(color = "black", fill = "gray", width = 1, aes(y = (..count..)/sum(..count..)))+
-      scale_x_discrete(limits = c(1,12))+
-      theme_minimal()
-    histPlot
-  })
+    wx_sub <- wx_sub[,c("DateTime","Conditions")]
+    wx_sub$Conditions <- as.character(wx_sub$Conditions)
+    
+    combinedWx <- merge(wx_df,wx_sub, by = "DateTime", all.x = TRUE)
+    combinedWx$Conditions[which(!combinedWx$Conditions %in% "Matching")] <- "Not Matching"
+    
+    wx_sub$Conditions <- as.factor(wx_sub$Conditions)
   
+    combinedWx$DayOfYear <- as.Date(paste("2000-",format(combinedWx$DateTime, "%j")), "%Y-%j")
+    combinedWx$Year <- year(combinedWx$DateTime)
+    
+    output$rh_ts_sub_plot <- renderPlot({
 
+      rh_sub_Plot <- ggplot(data = combinedWx, aes(x = DayOfYear, y = RH/100, size = Conditions, color = Conditions))+
+        geom_point(alpha = .5)+
+        scale_x_date("Day of the Year",
+                     labels = function(x) format(x, "%d-%b"))+
+        scale_y_continuous("Relative Humidity (%)",
+                           labels = scales::percent,
+                           limits = c(0,1))+
+        scale_size_manual(values = c("Matching" = 2,
+                                     "Not Matching" = 1))+
+        scale_color_manual(values = c("Matching" = "red",
+                                      "Not Matching" = "black"))+
+        labs(title = "Relative Humidity Records",
+             subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+        facet_grid(facets = Year ~ .,
+                   scales = "free_x")+
+        theme_minimal()
+      rh_sub_Plot})
+    
+    output$rhplot <- renderPlot({
+      wx_sub_countHours <- combinedWx %>%
+        count(Month,Conditions) %>%
+        group_by(Month) %>%
+        mutate(Percent = n / sum(n))
+        
+      
+        histPlot <- ggplot(data = filter(wx_sub_countHours,
+                                         Conditions == "Matching"),
+                           aes(x = Month, y = Percent, fill = Conditions))+
+          scale_y_continuous("Percent of Hours Matching Condtions (by month)",
+                             labels = scales::percent)+
+        geom_bar(color = "black", width = 1, stat = "identity", position="dodge")+
+        scale_x_continuous(breaks = seq(1,12,1),limits = c(1,12))+
+        theme_minimal()+
+        theme(legend.position="none")
+      histPlot
+    })
+    
+  })
 }
+  
+ 
+
+
+
+
 

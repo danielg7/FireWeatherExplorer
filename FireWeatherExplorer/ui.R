@@ -19,7 +19,7 @@ navbarPage("Fire Weather Explorer",
                                     choices = Larimer$STATION$NAME),
                         dateRangeInput('dateRange',
                                        label = 'Date range input: yyyy-mm-dd',
-                                       start = Sys.Date() - 365*10, end = Sys.Date()),
+                                       start = Sys.Date() - 365*3, end = Sys.Date()),
                         actionButton("pickStations", "Submit")
                         ),
                       mainPanel(
@@ -38,15 +38,22 @@ navbarPage("Fire Weather Explorer",
                                       "Months to use:",
                                       min = 1,
                                       max = 12, value = c(9,12)),
+                          sliderInput("hours",
+                                      "Hours to use:",
+                                      min = 1,
+                                      max = 24, value = c(8,18)),
                           sliderInput("rh",
                                       "Relative Humidity:",
                                       min = 1,
                                       max = 100,
                                       value = c(15,35)),
                           checkboxGroupInput("wind_directions", "Wind Directions:",
-                                             levels(wx_df$Wind_Direction))
+                                             levels(wx_df$Wind_Direction),
+                                             selected = "E"),
+                          actionButton("subsetData", "Submit")
                         ),
-                        mainPanel(plotOutput("rhplot")))
+                        mainPanel(plotOutput("rh_ts_sub_plot"),
+                                  plotOutput("rhplot")))
                     )
 )
 
