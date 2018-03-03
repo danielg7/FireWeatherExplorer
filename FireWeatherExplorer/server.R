@@ -11,15 +11,14 @@ library("shiny")
 library("ggplot2")
 library("dplyr")
 library("DT")
+library("leaflet")
 
 
 
 server <- function(input, output, session) {
 
+  # Pick Stations is Pressed -----------------------------------------------  
   
-  
-  
-  # Station Diagnostics Plots -----------------------------------------------  
   observeEvent(input$pickStations, {
  
 
@@ -40,7 +39,80 @@ server <- function(input, output, session) {
     
     wx_df <<- fxn_weatherCleaner(wx_dl)
     })
-  
+    
+
+# Add new sections when button is pressed ---------------------------------
+
+    appendTab(inputId = "tabs",
+              select = TRUE, # Select the panel
+              tabPanel("Diagnostic Plots", id = "Diagnostic",
+                       mainPanel(
+                         plotOutput("temp_ts_plot"),
+                         plotOutput("rh_ts_plot"),
+                         plotOutput("wind_ts_plot")
+                       )))
+    
+    appendTab(inputId = "tabs",
+              tabPanel("Subset Plots", id = "Subset",
+                       tabPanel("Subset Plots", id = "Subset",
+                                sidebarLayout(
+                                  sidebarPanel(
+                                    
+                                    # Month Sliders
+                                    
+                                    sliderInput("months",
+                                                "Months to use:",
+                                                min = 1,
+                                                max = 12, value = c(9,12)),
+                                    
+                                    # Hour Sliders
+                                    
+                                    sliderInput("hours",
+                                                "Hours to use:",
+                                                min = 1,
+                                                max = 24, value = c(8,18)),
+                                    
+                                    # RH Sliders
+                                    
+                                    sliderInput("rh",
+                                                "Relative Humidity:",
+                                                min = 1,
+                                                max = 100,
+                                                value = c(15,35)),
+                                    
+                                    # TO DO: Wind Sliders
+                                    
+                                    # Wind Direction Check Boxes
+                                    
+                                    checkboxGroupInput("wind_directions", "Wind Directions:",
+                                                       c("N",
+                                                         "NNE",
+                                                         "NE",
+                                                         "ENE",
+                                                         "E",
+                                                         "ESE",
+                                                         "SE",
+                                                         "SSE",
+                                                         "S",
+                                                         "SSW",
+                                                         "SW",
+                                                         "WSW",
+                                                         "W",
+                                                         "WNW",
+                                                         "NW",
+                                                         "NNW"),
+                                                       selected = "E"),
+                                    actionButton("subsetData", "Submit")
+                                  ),
+                                  
+                                  # Output plots for subset
+                                  
+                                  mainPanel(plotOutput("rh_ts_sub_plot"),
+                                            plotOutput("rhplot")))
+                       )))
+    
+    
+    # Plots for diagnostics
     
     output$temp_ts_plot <- renderPlot({
       tempPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = Temp))+
@@ -84,6 +156,7 @@ server <- function(input, output, session) {
   })
   
   # Subset Data Plots -----------------------------------------------
+  
   wxSubsetByConditions <- reactive({
     wx_Context <- wx_df %>%
       filter(Month >= input$months[1]) %>%
@@ -111,6 +184,11 @@ server <- function(input, output, session) {
     
     combinedWx$DayOfYear <<- as.Date(paste("2000-",format(combinedWx$DateTime, "%j")), "%Y-%j")
     combinedWx$Year <<- year(combinedWx$DateTime)
+    
+    wx_sub_countHours <<- combinedWx %>%
+      count(Month, Conditions) %>%
+      group_by(Month) %>%
+      mutate(Percent = n / sum(n))  
     
   })
   
@@ -140,15 +218,12 @@ server <- function(input, output, session) {
       rh_sub_Plot})
     
     output$rhplot <- renderPlot({
-      wx_sub_countHours <- combinedWx %>%
-        count(Month, Conditions) %>%
-        group_by(Month) %>%
-        mutate(Percent = n / sum(n))
-        
+      
+        wxSubsetByConditions()
       
         histPlot <- ggplot(data = filter(wx_sub_countHours, Conditions == "In Prescription"),
                            aes(x = Month, y = Percent, fill = Conditions))+
-          scale_y_continuous("Percent of Hours Matching Condtions (by month)",
+          scale_y_continuous("Percent of Hours Matching Conditions (by month)",
                              labels = scales::percent)+
         geom_bar(color = "black", width = 1, stat = "identity", position="dodge")+
         scale_x_continuous(breaks = seq(1,12,1),limits = c(1,12))+
@@ -160,22 +235,38 @@ server <- function(input, output, session) {
   
 
   
-# Metadata Output ---------------------------------------------------------
+# Change Based on Station Selection ---------------------------------------------------------
 
   observeEvent(input$station, {
+
+    # Fetch metadata
+    
     StationID <<- Larimer$STATION$STID[which(Larimer$STATION$NAME == input$station)]
     stationMetadata <<- wxStationMetadata(StationID = StationID)
     
-  output$metadata <- renderUI({
+    # Draw the map
+    
+    output$station_location <- renderLeaflet({
+      leaflet(width = 100, height = 100) %>%
+        addProviderTiles(providers$OpenTopoMap,
+                         options = providerTileOptions(noWrap = TRUE)
+        ) %>%
+        addMarkers(label = stationMetadata$STATION$NAME,
+                   lat = as.numeric(stationMetadata$STATION$LATITUDE),
+                   lng = as.numeric(stationMetadata$STATION$LONGITUDE))})
+    
+    # Draw the metadata
+    
+    output$metadata <- renderUI({
     meta_StationName <- paste("Station Name: ", stationMetadata$STATION$NAME, " (",stationMetadata$STATION$STID,")", sep = "")
     meta_type <- paste("Station Type:", stationMetadata$STATION$SHORTNAME)
     meta_GACC <- paste("GACC:", stationMetadata$STATION$GACC)
     meta_FireWxZone <- paste("NWS Fire Weather Zone:", stationMetadata$STATION$NWSFIREZONE)
-    
-    
     meta_LatLong <- paste("Lat / Long:",as.character(stationMetadata$STATION$LATITUDE),",",as.character(stationMetadata$STATION$LONGITUDE))
     HTML(paste('<br/>',meta_StationName, meta_type, meta_LatLong, meta_GACC, meta_FireWxZone, sep = '<br/>'))
-  })  
+  })
+    
+    
   })
   
 }

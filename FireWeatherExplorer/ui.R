@@ -7,10 +7,11 @@
 #    http://shiny.rstudio.com/
 #
 
-library(shiny)
+library("shiny")
+library("leaflet")
 
 
-navbarPage("Fire Weather Explorer",
+navbarPage("Fire Weather Explorer", id = "tabs",
           
 
 # Station Selection ------------------------------------------------
@@ -27,69 +28,8 @@ navbarPage("Fire Weather Explorer",
                         htmlOutput("metadata")
                         ),
                       mainPanel(
-                        plotOutput("temp_ts_plot"),
-                        plotOutput("rh_ts_plot"),
-                        plotOutput("wind_ts_plot")
-           ))),
-
-# Subset Plots ------------------------------------------------
-
-           tabPanel("Subset Plots",
-                      sidebarLayout(
-                        sidebarPanel(
-                          
-                          # Month Sliders
-                          
-                          sliderInput("months",
-                                      "Months to use:",
-                                      min = 1,
-                                      max = 12, value = c(9,12)),
-                          
-                          # Hour Sliders
-                          
-                          sliderInput("hours",
-                                      "Hours to use:",
-                                      min = 1,
-                                      max = 24, value = c(8,18)),
-                          
-                          # RH Sliders
-                          
-                          sliderInput("rh",
-                                      "Relative Humidity:",
-                                      min = 1,
-                                      max = 100,
-                                      value = c(15,35)),
-                          
-                          # TO DO: Wind Sliders
-                          
-                          # Wind Direction Check Boxes
-                          
-                          checkboxGroupInput("wind_directions", "Wind Directions:",
-                                             c("N",
-                                               "NNE",
-                                               "NE",
-                                               "ENE",
-                                               "E",
-                                               "ESE",
-                                               "SE",
-                                               "SSE",
-                                               "S",
-                                               "SSW",
-                                               "SW",
-                                               "WSW",
-                                               "W",
-                                               "WNW",
-                                               "NW",
-                                               "NNW"),
-                                             selected = "E"),
-                          actionButton("subsetData", "Submit")
-                        ),
-                        
-                        # Output plots for subset
-                        
-                        mainPanel(plotOutput("rh_ts_sub_plot"),
-                                  plotOutput("rhplot")))
-                    )
+                        leafletOutput("station_location")
+           )))
 )
 
 

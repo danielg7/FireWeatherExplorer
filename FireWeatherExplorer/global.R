@@ -16,3 +16,4 @@ wx_df <- NULL
 wx_dl <- NULL
 stationMetadata <- NULL
 combinedWx <- NULL
+wx_sub_countHours <- NULL
