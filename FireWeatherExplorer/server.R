@@ -15,12 +15,15 @@ library("DT")
 
 
 server <- function(input, output, session) {
+
+  
+  
   
   # Station Diagnostics Plots -----------------------------------------------  
   observeEvent(input$pickStations, {
-    
-    StationID <- Larimer$STATION$STID[which(Larimer$STATION$NAME == input$station)]
-    
+ 
+
+    isolate({
     StartDate_unformatted <- as.Date(input$dateRange[1], origin = "1970-01-01")
     StartDate_formatted <- paste(format(StartDate_unformatted, "%Y%m%d"),"0001",sep = "")
     
@@ -34,40 +37,10 @@ server <- function(input, output, session) {
                            Start = StartDate_formatted,
                            End = EndDate_formatted)
     
-    stationMetadata <<- wxStationMetadata(StationID = StationID)
     
-    if(wx_dl$SUMMARY$NUMBER_OF_OBJECTS == 0){
-      showNotification(paste("No data in this station for this period of record!",StartDate_formatted,"-",EndDate_formatted,sep=""))
-
-      wx_df <<- data.frame("DateTime" = as.Date(NA),
-                          "FuelMoisture" = NA,
-                          "Wind_Direction" = NA,
-                          "Wind_Speed" = NA,
-                          "Temp" = NA,
-                          "RH" = NA,
-                          "Year" = NA,
-                          "DayOfYear" = NA)
-    }
-
-    if(wx_dl$SUMMARY$NUMBER_OF_OBJECTS > 0){
-    wx_df <<- data.frame("dt" = wx_dl$STATION$OBSERVATIONS$date_time,
-                       "fuel_moisture" = wx_dl$STATION$OBSERVATIONS$fuel_moisture_set_1,
-                        "wind_direction" = wx_dl$STATION$OBSERVATIONS$wind_cardinal_direction_set_1d,
-                        "wind_speed" = wx_dl$STATION$OBSERVATIONS$wind_speed_set_1,
-                        "temp" = wx_dl$STATION$OBSERVATIONS$air_temp_set_1,
-                        "rh" = wx_dl$STATION$OBSERVATIONS$relative_humidity_set_1)
-    
-    #wx_df[nrow(wx_df)+1,1:6] <- NA
-    
-    names(wx_df) <<- c("DateTime","FuelMoisture","Wind_Direction","Wind_Speed","Temp","RH")
-    wx_df$RH <<- as.numeric(as.character(wx_df$RH))
-    wx_df$DateTime <<- ymd_hms(wx_df$DateTime,tz = "UTC")
-    attributes(wx_df$DateTime)$tzone <<- "America/Denver"  
-    wx_df$Hour <<- hour(wx_df$DateTime)
-    wx_df$Month <<- month(wx_df$DateTime)
-    wx_df$Year <<- year(wx_df$DateTime)
-    
-    wx_df$DayOfYear <<- as.Date(paste("2000-",format(wx_df$Date, "%j")), "%Y-%j")
+    wx_df <<- fxn_weatherCleaner(wx_dl)
+    })
+  
     
     output$temp_ts_plot <- renderPlot({
       tempPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = Temp))+
@@ -104,7 +77,7 @@ server <- function(input, output, session) {
         theme_minimal()
       wsPlot
     })
-    }
+    
     
 
   })
@@ -151,7 +124,7 @@ server <- function(input, output, session) {
         scale_y_continuous("Relative Humidity (%)",
                            labels = scales::percent,
                            limits = c(0,1))+
-        scale_size_manual(values = c("In Prescription" = 2,
+        scale_size_manual(values = c("In Prescription" = 3,
                                      "Window" = 1,
                                      "Not Matching" = 1))+
         scale_color_manual(values = c("In Prescription" = "red",
@@ -184,6 +157,27 @@ server <- function(input, output, session) {
     })
     
   })
+  
+
+  
+# Metadata Output ---------------------------------------------------------
+
+  observeEvent(input$station, {
+    StationID <<- Larimer$STATION$STID[which(Larimer$STATION$NAME == input$station)]
+    stationMetadata <<- wxStationMetadata(StationID = StationID)
+    
+  output$metadata <- renderUI({
+    meta_StationName <- paste("Station Name: ", stationMetadata$STATION$NAME, " (",stationMetadata$STATION$STID,")", sep = "")
+    meta_type <- paste("Station Type:", stationMetadata$STATION$SHORTNAME)
+    meta_GACC <- paste("GACC:", stationMetadata$STATION$GACC)
+    meta_FireWxZone <- paste("NWS Fire Weather Zone:", stationMetadata$STATION$NWSFIREZONE)
+    
+    
+    meta_LatLong <- paste("Lat / Long:",as.character(stationMetadata$STATION$LATITUDE),",",as.character(stationMetadata$STATION$LONGITUDE))
+    HTML(paste('<br/>',meta_StationName, meta_type, meta_LatLong, meta_GACC, meta_FireWxZone, sep = '<br/>'))
+  })  
+  })
+  
 }
   
  
