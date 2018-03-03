@@ -18,12 +18,12 @@ navbarPage("Fire Weather Explorer", id = "tabs",
            tabPanel("Station Selection",
                     sidebarLayout(
                       sidebarPanel(
-                        selectInput('station',
-                                    label = "Select Station",
-                                    choices = Larimer$STATION$NAME),
-                        dateRangeInput('dateRange',
-                                       label = 'Date range input: yyyy-mm-dd',
-                                       start = Sys.Date() - 365*3, end = Sys.Date()),
+                        selectInput('State',
+                                    label = "Select State",
+                                    choices = sort(as.character(unique(AllRAWS$STATION$STATE)))),
+                        uiOutput('County'),
+                        uiOutput('station'),
+                        uiOutput('POR'),
                         actionButton("pickStations", "Submit"),
                         htmlOutput("metadata")
                         ),

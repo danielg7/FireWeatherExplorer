@@ -5,11 +5,15 @@ source("./RawsDL.R")
 
 # Read in Stations --------------------------------------------------------
 
-Larimer <- mesowest::mw('metadata',
-                        county="Larimer",
-                        state="CO",
+#Larimer <- mesowest::mw('metadata',
+ #                       county="Larimer",
+  #                      state="CO",
+   #                     network=2,
+    #                    status='ACTIVE')
+
+AllRAWS <- mesowest::mw('metadata',
                         network=2,
-                        status='ACTIVE')
+                        status='ACTIVE', complete = TRUE)
 
 
 wx_df <- NULL

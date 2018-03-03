@@ -17,17 +17,35 @@ library("leaflet")
 
 server <- function(input, output, session) {
 
-  # Pick Stations is Pressed -----------------------------------------------  
+ 
+  
+  observeEvent(input$State, {
+    output$County <- renderUI({
+      selectInput("County",
+                  label = "Select County",
+                  choices = sort(as.character(unique(AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$STATE == input$State)]))),
+                  selected = "CO")
+      })
+  })
+  
+  observeEvent(input$County, {
+    output$station <- renderUI({
+      selectInput(label = "Select Stations",
+                  inputId = "station",
+                  choices = unique(AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == input$County)]),
+                  selected = "Larimer")
+    })
+  })
   
   observeEvent(input$pickStations, {
  
 
     isolate({
-    StartDate_unformatted <- as.Date(input$dateRange[1], origin = "1970-01-01")
-    StartDate_formatted <- paste(format(StartDate_unformatted, "%Y%m%d"),"0001",sep = "")
+   # StartDate_unformatted <- as.Date(input$dateRange[1], origin = "1970-01-01")
+    StartDate_formatted <- paste(input$Year[1],"01","01","0001",sep = "")
     
-    EndDate_unformatted <- as.Date(input$dateRange[2], origin = "1970-01-01")
-    EndDate_formatted <- paste(format(EndDate_unformatted, "%Y%m%d"),"2300",sep = "")
+    #EndDate_unformatted <- as.Date(input$dateRange[2], origin = "1970-01-01")
+    EndDate_formatted <- paste(input$Year[2],"12","12","2300",sep = "")
     
     showNotification(paste("Searching for:\n",StartDate_formatted," - ",EndDate_formatted,sep=""))
     
@@ -80,7 +98,13 @@ server <- function(input, output, session) {
                                                 max = 100,
                                                 value = c(15,35)),
                                     
-                                    # TO DO: Wind Sliders
+                                    # Wind Sliders
+                                    
+                                    sliderInput("wind",
+                                                "Wind speeds:",
+                                                min = 0,
+                                                max = 50, value = c(8,12)),
+                                    
                                     
                                     # Wind Direction Check Boxes
                                     
@@ -101,8 +125,7 @@ server <- function(input, output, session) {
                                                          "WNW",
                                                          "NW",
                                                          "NNW"),
-                                                       selected = "E"),
-                                    actionButton("subsetData", "Submit")
+                                                       selected = "E")
                                   ),
                                   
                                   # Output plots for subset
@@ -167,6 +190,7 @@ server <- function(input, output, session) {
       filter(RH >= input$rh[1] & RH <= input$rh[2]) %>%
       filter(Wind_Direction %in% input$wind_directions) %>%
       filter(Hour >= input$hours[1] & Hour <= input$hours[2]) %>%
+      filter(Wind_Speed >= input$wind[1] & Wind_Speed <= input$wind[2]) %>%
       mutate(Conditions = "In Prescription")
     
     wx_Context <- wx_Context[,c("DateTime","Conditions")]
@@ -196,15 +220,18 @@ server <- function(input, output, session) {
       
       wxSubsetByConditions()
 
-      rh_sub_Plot <- ggplot(data = combinedWx, aes(x = DayOfYear, y = RH/100, size = Conditions, color = Conditions))+
+      rh_sub_Plot <- ggplot(data = filter(combinedWx, Conditions %in% c("Window","Not Matching")), aes(x = DayOfYear, y = RH/100, size = Conditions, color = Conditions))+
         geom_point(alpha = .5)+
+        geom_point(data = filter(combinedWx, Conditions %in% "In Prescription"), aes(x = DayOfYear, y = RH/100),
+                   color = "red",
+                   size = 2,
+                   show.legend = FALSE)+
         scale_x_date("Day of the Year",
                      labels = function(x) format(x, "%d-%b"))+
         scale_y_continuous("Relative Humidity (%)",
                            labels = scales::percent,
                            limits = c(0,1))+
-        scale_size_manual(values = c("In Prescription" = 3,
-                                     "Window" = 1,
+        scale_size_manual(values = c("Window" = 1,
                                      "Not Matching" = 1))+
         scale_color_manual(values = c("In Prescription" = "red",
                                       "Window" = "black",
@@ -241,7 +268,9 @@ server <- function(input, output, session) {
 
     # Fetch metadata
     
-    StationID <<- Larimer$STATION$STID[which(Larimer$STATION$NAME == input$station)]
+    StationID <<- AllRAWS$STATION$STID[which(AllRAWS$STATION$NAME == input$station)]
+    
+   # StationID <<- Larimer$STATION$STID[which(Larimer$STATION$NAME == input$station)]
     stationMetadata <<- wxStationMetadata(StationID = StationID)
     
     # Draw the map
@@ -262,13 +291,28 @@ server <- function(input, output, session) {
     meta_type <- paste("Station Type:", stationMetadata$STATION$SHORTNAME)
     meta_GACC <- paste("GACC:", stationMetadata$STATION$GACC)
     meta_FireWxZone <- paste("NWS Fire Weather Zone:", stationMetadata$STATION$NWSFIREZONE)
+    meta_Range <- paste("Period of Record: ",
+                        min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
+                        " - ",
+                        max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
+                        sep = "")
     meta_LatLong <- paste("Lat / Long:",as.character(stationMetadata$STATION$LATITUDE),",",as.character(stationMetadata$STATION$LONGITUDE))
-    HTML(paste('<br/>',meta_StationName, meta_type, meta_LatLong, meta_GACC, meta_FireWxZone, sep = '<br/>'))
-  })
+    HTML(paste('<br/>',meta_StationName, meta_type, meta_Range, meta_LatLong, meta_GACC, meta_FireWxZone, sep = '<br/>'))
+    })
     
+    # Change the period of record indicator
     
-  })
-  
+    output$POR <- renderUI({
+      sliderInput(label = 'Select Period of Record',
+                  inputId = "Year",
+                  min = min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
+                  max = max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
+                  value = c(min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD)))+1,
+                            max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD)))),
+                  sep = "")
+      })
+    
+})
 }
   
  
