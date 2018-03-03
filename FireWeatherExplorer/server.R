@@ -13,10 +13,6 @@ library("dplyr")
 library("DT")
 
 
-source("RawsDL.R")
-
-wx_df <- NULL
-wx_dl <- NULL
 
 server <- function(input, output, session) {
   
@@ -38,7 +34,7 @@ server <- function(input, output, session) {
                            Start = StartDate_formatted,
                            End = EndDate_formatted)
     
-    stationMetadata <- wxStationMetadata(StationID = StationID)
+    stationMetadata <<- wxStationMetadata(StationID = StationID)
     
     if(wx_dl$SUMMARY$NUMBER_OF_OBJECTS == 0){
       showNotification(paste("No data in this station for this period of record!",StartDate_formatted,"-",EndDate_formatted,sep=""))
@@ -115,38 +111,53 @@ server <- function(input, output, session) {
   
   # Subset Data Plots -----------------------------------------------
   observeEvent(input$subsetData, {
-    wx_sub <- wx_df %>%
+    wx_Context <- wx_df %>%
       filter(Month >= input$months[1]) %>%
       filter(Month <= input$months[2]) %>%
+      mutate(Conditions = "Window")
+    
+    wx_Rx <- wx_Context %>%
       filter(RH >= input$rh[1] & RH <= input$rh[2]) %>%
       filter(Wind_Direction %in% input$wind_directions) %>%
       filter(Hour >= input$hours[1] & Hour <= input$hours[2]) %>%
-      mutate(Conditions = "Matching")
+      mutate(Conditions = "In Prescription")
     
-    wx_sub <- wx_sub[,c("DateTime","Conditions")]
-    wx_sub$Conditions <- as.character(wx_sub$Conditions)
+    wx_Context <- wx_Context[,c("DateTime","Conditions")]
+    wx_Rx <- wx_Rx[,c("DateTime","Conditions")]
+    wx_Both <- rbind(wx_Rx,wx_Context)
+    wx_Both$Conditions <- as.character(wx_Both$Conditions)
     
-    combinedWx <- merge(wx_df,wx_sub, by = "DateTime", all.x = TRUE)
-    combinedWx$Conditions[which(!combinedWx$Conditions %in% "Matching")] <- "Not Matching"
+       
+    combinedWx <- merge(wx_df,wx_Both, by = "DateTime", all.x = TRUE)
     
-    wx_sub$Conditions <- as.factor(wx_sub$Conditions)
+    
+    
+    combinedWx$Conditions[which(!combinedWx$Conditions %in% c("In Prescription","Window"))] <- "Not Matching"
+    
+    combinedWx$Conditions <- as.factor(combinedWx$Conditions)
   
     combinedWx$DayOfYear <- as.Date(paste("2000-",format(combinedWx$DateTime, "%j")), "%Y-%j")
     combinedWx$Year <- year(combinedWx$DateTime)
     
+    write.csv(combinedWx,"test.txt",row.names = FALSE)
+    
+    
     output$rh_ts_sub_plot <- renderPlot({
 
       rh_sub_Plot <- ggplot(data = combinedWx, aes(x = DayOfYear, y = RH/100, size = Conditions, color = Conditions))+
-        geom_point(alpha = .5)+
+        geom_point(alpha = .5, size = .5)+
         scale_x_date("Day of the Year",
                      labels = function(x) format(x, "%d-%b"))+
         scale_y_continuous("Relative Humidity (%)",
                            labels = scales::percent,
                            limits = c(0,1))+
-        scale_size_manual(values = c("Matching" = 2,
+        scale_size_manual(values = c("In Prescription" = 2,
+                                     "Window" = 1,
                                      "Not Matching" = 1))+
-        scale_color_manual(values = c("Matching" = "red",
-                                      "Not Matching" = "black"))+
+        scale_color_manual(values = c("In Prescription" = "red",
+                                      "Window" = "black",
+                                      "Not Matching" = "gray"
+                                      ))+
         labs(title = "Relative Humidity Records",
              subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
         facet_grid(facets = Year ~ .,
@@ -156,13 +167,12 @@ server <- function(input, output, session) {
     
     output$rhplot <- renderPlot({
       wx_sub_countHours <- combinedWx %>%
-        count(Month,Conditions) %>%
+        count(Month, Conditions) %>%
         group_by(Month) %>%
         mutate(Percent = n / sum(n))
         
       
-        histPlot <- ggplot(data = filter(wx_sub_countHours,
-                                         Conditions == "Matching"),
+        histPlot <- ggplot(data = filter(wx_sub_countHours, Conditions == "In Prescription"),
                            aes(x = Month, y = Percent, fill = Conditions))+
           scale_y_continuous("Percent of Hours Matching Condtions (by month)",
                              labels = scales::percent)+

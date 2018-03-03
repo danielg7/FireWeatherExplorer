@@ -14,11 +14,7 @@ library("lubridate")
 fileName <- 'api_key.txt'
 api_key <- readChar(fileName, file.info(fileName)$size)
 
-requestToken(apikey = api_key)
-
-# Read in Stations --------------------------------------------------------
-
-Larimer <- mw('metadata',county="Larimer", state="CO", network=2, status='ACTIVE')
+mesowest::requestToken(apikey = api_key)
 
 # Read In Station Data ----------------------------------------------------
 
@@ -38,7 +34,7 @@ wxStationMetadata <- function(StationID){
   return(metadata)
 }
 
-stationMetadata <- wxStationMetadata(StationID)
+
 
 
 

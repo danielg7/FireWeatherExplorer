@@ -48,7 +48,7 @@ navbarPage("Fire Weather Explorer",
                                       max = 100,
                                       value = c(15,35)),
                           checkboxGroupInput("wind_directions", "Wind Directions:",
-                                             levels(wx_df$Wind_Direction),
+                                             c("N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"),
                                              selected = "E"),
                           actionButton("subsetData", "Submit")
                         ),
