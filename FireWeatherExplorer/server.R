@@ -65,6 +65,7 @@ server <- function(input, output, session) {
         theme_minimal()
       rhPlot
     })
+    
     output$wind_ts_plot <- renderPlot({
       wsPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = Wind_Speed))+
         geom_point(alpha = 0.25, size = 0.25)+
@@ -83,7 +84,7 @@ server <- function(input, output, session) {
   })
   
   # Subset Data Plots -----------------------------------------------
-  observeEvent(input$subsetData, {
+  wxSubsetByConditions <- reactive({
     wx_Context <- wx_df %>%
       filter(Month >= input$months[1]) %>%
       filter(Month <= input$months[2]) %>%
@@ -100,25 +101,25 @@ server <- function(input, output, session) {
     wx_Both <- rbind(wx_Rx,wx_Context)
     wx_Both$Conditions <- as.character(wx_Both$Conditions)
     
-       
-    combinedWx <- merge(wx_df,wx_Both, by = "DateTime", all.x = TRUE)
+    
+    combinedWx <<- merge(wx_df,wx_Both, by = "DateTime", all.x = TRUE)
     
     
+    combinedWx$Conditions[which(!combinedWx$Conditions %in% c("In Prescription","Window"))] <<- "Not Matching"
     
-    combinedWx$Conditions[which(!combinedWx$Conditions %in% c("In Prescription","Window"))] <- "Not Matching"
+    combinedWx$Conditions <<- as.factor(combinedWx$Conditions)
     
-    combinedWx$Conditions <- as.factor(combinedWx$Conditions)
+    combinedWx$DayOfYear <<- as.Date(paste("2000-",format(combinedWx$DateTime, "%j")), "%Y-%j")
+    combinedWx$Year <<- year(combinedWx$DateTime)
+    
+  })
   
-    combinedWx$DayOfYear <- as.Date(paste("2000-",format(combinedWx$DateTime, "%j")), "%Y-%j")
-    combinedWx$Year <- year(combinedWx$DateTime)
-    
-    write.csv(combinedWx,"test.txt",row.names = FALSE)
-    
-    
     output$rh_ts_sub_plot <- renderPlot({
+      
+      wxSubsetByConditions()
 
       rh_sub_Plot <- ggplot(data = combinedWx, aes(x = DayOfYear, y = RH/100, size = Conditions, color = Conditions))+
-        geom_point(alpha = .5, size = .5)+
+        geom_point(alpha = .5)+
         scale_x_date("Day of the Year",
                      labels = function(x) format(x, "%d-%b"))+
         scale_y_continuous("Relative Humidity (%)",
@@ -156,7 +157,6 @@ server <- function(input, output, session) {
       histPlot
     })
     
-  })
   
 
   

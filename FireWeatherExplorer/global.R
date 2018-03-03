@@ -15,3 +15,4 @@ Larimer <- mesowest::mw('metadata',
 wx_df <- NULL
 wx_dl <- NULL
 stationMetadata <- NULL
+combinedWx <- NULL
