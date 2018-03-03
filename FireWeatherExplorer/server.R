@@ -21,14 +21,23 @@ server <- function(input, output, session) {
     
     StationID <- Larimer$STATION$STID[which(Larimer$STATION$NAME == input$station)]
     
+    StartDate_unformatted <- as.Date(input$dateRange[1], origin = "1970-01-01")
+    StartDate_formatted <- paste(format(StartDate_unformatted, "%Y%m%d"),"0001",sep = "")
+    
+    EndDate_unformatted <- as.Date(input$dateRange[2], origin = "1970-01-01")
+    EndDate_formatted <- paste(format(EndDate_unformatted, "%Y%m%d"),"2300",sep = "")
+    
+    showNotification(paste("Searching for:",StartDate_formatted,"-",EndDate_formatted,sep=""))
+    
+    
     wx_dl <- readInWeather(StationID = StationID,
-                           Start = "201101011200",
-                           End = "201712312359")
+                           Start = StartDate_formatted,
+                           End = EndDate_formatted)
     
     stationMetadata <- wxStationMetadata(StationID = StationID)
     
     if(wx_dl$SUMMARY$NUMBER_OF_OBJECTS == 0){
-      showNotification("No data in this station for this period of record!")
+      showNotification(paste("No data in this station for this period of record!",StartDate_formatted,"-",EndDate_formatted,sep=""))
 
       wx_df <- data.frame("DateTime" = as.Date(NA),
                           "FuelMoisture" = NA,
@@ -63,8 +72,7 @@ server <- function(input, output, session) {
     
     output$temp_ts_plot <- renderPlot({
       tempPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = Temp))+
-        geom_point(alpha = 0.25)+
-        geom_smooth(color = "red")+
+        geom_point(alpha = 0.25, size = 0.25)+
         scale_x_date("Day of the Year", labels = function(x) format(x, "%d-%b"))+
         scale_y_continuous("Temperature (F)")+
         labs(title = "Temperature Records",
@@ -114,7 +122,8 @@ server <- function(input, output, session) {
       scale_x_discrete(limits = c(1,12))+
       theme_minimal()
     histPlot
-    
   })
+  
+
 }
 

@@ -19,7 +19,7 @@ navbarPage("Fire Weather Explorer",
                                     choices = Larimer$STATION$NAME),
                         dateRangeInput('dateRange',
                                        label = 'Date range input: yyyy-mm-dd',
-                                       start = Sys.Date() - 2, end = Sys.Date() + 2),
+                                       start = Sys.Date() - 365*10, end = Sys.Date()),
                         actionButton("pickStations", "Submit")
                         ),
                       mainPanel(
