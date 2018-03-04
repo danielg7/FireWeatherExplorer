@@ -25,11 +25,11 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                         actionButton("pickStations", "Submit")
                         ),
                       mainPanel(
-                        tags$div(class="header", checked = NA,
-                                 tags$h1("Fire Weather Explorer")),
-                        leafletOutput("station_location"),
-                        htmlOutput("metadata")
+                        fluidRow(htmlOutput("metadataTitle")),
+                        fluidRow(leafletOutput("station_location")),
+                        fluidRow(htmlOutput("metadata"))
                         )
+                        
                       )
            ),
            tabPanel(title = "Data Quality Plots", value = "Diagnostic",

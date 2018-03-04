@@ -224,7 +224,7 @@ server <- function(input, output, session) {
     # Draw the map
     
     output$station_location <- renderLeaflet({
-      leaflet(width = 100, height = 100) %>%
+      leaflet() %>%
         addProviderTiles(providers$OpenTopoMap,
                          options = providerTileOptions(noWrap = TRUE)
         ) %>%
@@ -246,7 +246,15 @@ server <- function(input, output, session) {
                         sep = "")
     meta_LatLong <- paste("Lat / Long :",as.character(stationMetadata$STATION$LATITUDE),", ",as.character(stationMetadata$STATION$LONGITUDE),
                           sep = "")
-    HTML(paste('<br/>',meta_StationName, meta_type, meta_Range, meta_LatLong, meta_GACC, meta_FireWxZone, sep = '<br/>'))
+    HTML(paste('<br/>',meta_type, meta_Range, meta_LatLong, meta_GACC, meta_FireWxZone, sep = '<br/>'))
+    })
+    
+    # Draw the metadata title
+    
+    output$metadataTitle <- renderUI({
+      meta_StationName <- paste(stationMetadata$STATION$NAME, " (",stationMetadata$STATION$STID,")", sep = "")
+      
+      HTML(paste('<h1>',meta_StationName,'</h1>',sep = ""))
     })
     
     # Change the period of record indicator
