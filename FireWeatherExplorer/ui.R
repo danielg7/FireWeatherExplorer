@@ -18,20 +18,20 @@ navbarPage("Fire Weather Explorer", id = "tabs",
            tabPanel("Station Selection",
                     sidebarLayout(
                       sidebarPanel(
+                        includeMarkdown("includedText/mainPageText.md")
                         selectInput('State',
                                     label = "Select State",
                                     choices = sort(as.character(unique(AllRAWS$STATION$STATE)))),
                         uiOutput('County'),
                         uiOutput('station'),
                         uiOutput('POR'),
-                        actionButton("pickStations", "Submit"),
-                        htmlOutput("metadata")
+                        actionButton("pickStations", "Submit")
                         ),
                       mainPanel(
                         tags$div(class="header", checked = NA,
                                  tags$h1("Fire Weather Explorer")),
                         leafletOutput("station_location"),
-                        includeMarkdown("includedText/mainPageText.md")
+                        htmlOutput("metadata")
            ))
            ),
 
