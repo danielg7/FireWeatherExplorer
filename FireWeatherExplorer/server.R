@@ -12,7 +12,8 @@ library("ggplot2")
 library("dplyr")
 library("DT")
 library("leaflet")
-
+library("plotly")
+library("ggthemes")
 
 
 server <- function(input, output, session) {
@@ -38,11 +39,12 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$pickStations, {
+    buttonClicker <<- buttonClicker+1
  
 
     isolate({
    # StartDate_unformatted <- as.Date(input$dateRange[1], origin = "1970-01-01")
-    StartDate_formatted <- paste(input$Year[1],"01","01","0001",sep = "")
+    StartDate_formatted <- paste(input$Year[1],"01","01","1200",sep = "")
     
     #EndDate_unformatted <- as.Date(input$dateRange[2], origin = "1970-01-01")
     EndDate_formatted <- paste(input$Year[2],"12","12","2300",sep = "")
@@ -61,18 +63,36 @@ server <- function(input, output, session) {
 
 # Add new sections when button is pressed ---------------------------------
 
-    appendTab(inputId = "tabs",
+    appendTab(inputId = "tabs", menuName = "Output",
               select = TRUE, # Select the panel
-              tabPanel("Diagnostic Plots", id = "Diagnostic",
-                       mainPanel(
-                         plotOutput("temp_ts_plot"),
-                         plotOutput("rh_ts_plot"),
-                         plotOutput("wind_ts_plot")
-                       )))
-    
-    appendTab(inputId = "tabs",
-              tabPanel("Subset Plots", id = "Subset",
-                       tabPanel("Subset Plots", id = "Subset",
+              tabPanel(paste(stationMetadata$STATION$NAME," - Diagnostic Plots", sep = ""), id = "Diagnostic",
+                       sidebarLayout(
+                         sidebarPanel(
+                           radioButtons(inputId = "diagnosticType",
+                                        label = "Choose plot type:",
+                                        choiceNames = c("Relative Humidity", "Temperature", "Wind Speed"),
+                                        choiceValues = c("RH","Temp","Wind_Speed"),
+                                        selected = "RH")
+                         ),
+                         mainPanel(
+                           tags$div(class="header", checked = NA,
+                                    tags$h1("Diagnostic Plots")),
+                           #plotOutput("output$diagnosticsPlot"),
+                           conditionalPanel("input.diagnosticType == 'RH'",
+                                            plotOutput("rh_ts_plot")),
+                           conditionalPanel("input.diagnosticType == 'Temp'",
+                                            plotOutput("temp_ts_plot")),
+                           conditionalPanel("input.diagnosticType == 'Wind_Speed'",
+                                            plotOutput("wind_ts_plot")),
+                         includeMarkdown("includedText/diagnosticPlots.md")
+                       )
+                       )
+                       )
+              )
+              
+
+    appendTab(inputId = "tabs", menuName = "Output",
+                       tabPanel(paste(stationMetadata$STATION$NAME," - Subset Plots", sep = ""), id = "Subset",
                                 sidebarLayout(
                                   sidebarPanel(
                                     
@@ -132,10 +152,29 @@ server <- function(input, output, session) {
                                   
                                   mainPanel(plotOutput("rh_ts_sub_plot"),
                                             plotOutput("rhplot")))
-                       )))
+                       )
+    )
+    
+    output$table <- DT::renderDataTable(DT::datatable({
+      data <- wx_df[!names(wx_df) %in% c("Year","DayOfYear","Hour","Month")]
+      data
+      }))
+    
+    appendTab(inputId = "tabs", menuName = "Output",
+              tabPanel(title = paste(stationMetadata$STATION$NAME," - Records Table", sep = ""),
+                       id = "Datatable",
+                       mainPanel
+                       (
+                         DT::dataTableOutput("table")
+                       )
+                       )
+              )
+    
+  #})
     
     
     # Plots for diagnostics
+    
     
     output$temp_ts_plot <- renderPlot({
       tempPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = Temp))+
@@ -145,9 +184,10 @@ server <- function(input, output, session) {
         labs(title = "Temperature Records",
              subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
         facet_grid(facets = Year ~ .)+
-        theme_minimal()
+        theme_bw(base_size=18, base_family="Avenir")
       tempPlot
     })
+    
     output$rh_ts_plot <- renderPlot({
       rhPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = RH/100))+
         geom_point(alpha = 0.25, size = 0.25)+
@@ -157,7 +197,7 @@ server <- function(input, output, session) {
         labs(title = "Relative Humidity Records",
              subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
         facet_grid(facets = Year ~ .)+
-        theme_minimal()
+        theme_bw(base_size=18, base_family="Avenir")
       rhPlot
     })
     
@@ -170,7 +210,7 @@ server <- function(input, output, session) {
         labs(title = "Wind Speed Records",
              subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
         facet_grid(facets = Year ~ .)+
-        theme_minimal()
+        theme_bw(base_size=18, base_family="Avenir")
       wsPlot
     })
     
@@ -220,28 +260,27 @@ server <- function(input, output, session) {
       
       wxSubsetByConditions()
 
-      rh_sub_Plot <- ggplot(data = filter(combinedWx, Conditions %in% c("Window","Not Matching")), aes(x = DayOfYear, y = RH/100, size = Conditions, color = Conditions))+
-        geom_point(alpha = .5)+
-        geom_point(data = filter(combinedWx, Conditions %in% "In Prescription"), aes(x = DayOfYear, y = RH/100),
-                   color = "red",
-                   size = 2,
-                   show.legend = FALSE)+
+      rh_sub_Plot <- ggplot(data = combinedWx, aes(x = DayOfYear, y = RH/100, size = Conditions, color = Conditions, alpha = Conditions))+
+        geom_point()+
+        scale_alpha_manual(values = c("In Prescription" = 1,
+                                      "Window" = .1,
+                                      "Not Matching" = .10), guide = FALSE)+
         scale_x_date("Day of the Year",
                      labels = function(x) format(x, "%d-%b"))+
         scale_y_continuous("Relative Humidity (%)",
                            labels = scales::percent,
                            limits = c(0,1))+
-        scale_size_manual(values = c("Window" = 1,
-                                     "Not Matching" = 1))+
+        scale_size_manual(values = c("In Prescription" = 2,
+                                     "Window" = 1,
+                                     "Not Matching" = 1), guide = FALSE)+
         scale_color_manual(values = c("In Prescription" = "red",
-                                      "Window" = "black",
-                                      "Not Matching" = "gray"
-                                      ))+
+                                      "Not Matching" = "gray",
+                                      "Window" = "blue"))+
         labs(title = "Relative Humidity Records",
              subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
         facet_grid(facets = Year ~ .,
                    scales = "free_x")+
-        theme_minimal()
+        theme_bw(base_size=18, base_family="Avenir")
       rh_sub_Plot})
     
     output$rhplot <- renderPlot({
@@ -254,7 +293,7 @@ server <- function(input, output, session) {
                              labels = scales::percent)+
         geom_bar(color = "black", width = 1, stat = "identity", position="dodge")+
         scale_x_continuous(breaks = seq(1,12,1),limits = c(1,12))+
-        theme_minimal()+
+        theme_bw(base_size=18, base_family="Avenir")+
         theme(legend.position="none")
       histPlot
     })

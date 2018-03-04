@@ -21,3 +21,9 @@ wx_dl <- NULL
 stationMetadata <- NULL
 combinedWx <- NULL
 wx_sub_countHours <- NULL
+buttonClicker <- 0
+
+
+universalTheme <- function(){ 
+  theme_light(base_size=12, base_family="Avenir")
+}

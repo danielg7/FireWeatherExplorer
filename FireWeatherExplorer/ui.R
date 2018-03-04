@@ -28,8 +28,14 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                         htmlOutput("metadata")
                         ),
                       mainPanel(
-                        leafletOutput("station_location")
-           )))
+                        tags$div(class="header", checked = NA,
+                                 tags$h1("Fire Weather Explorer")),
+                        leafletOutput("station_location"),
+                        includeMarkdown("includedText/mainPageText.md")
+           ))
+           ),
+
+navbarMenu("Output", menuName = "Output")
 )
 
 
