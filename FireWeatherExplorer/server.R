@@ -48,6 +48,7 @@ server <- function(input, output, session) {
     
     
     wx_dl <<- readInWeather(StationID = StationID,
+                            County = input$County,
                            Start = StartDate_formatted,
                            End = EndDate_formatted)
     

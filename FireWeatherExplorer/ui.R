@@ -146,6 +146,11 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                                  plotOutput("rhplot"))
                                 )
                       )
+                    ),
+           tabPanel("About", id = "About",
+                    mainPanel(
+                      includeMarkdown("includedText/about.md")
+                      )
                     )
 )
 

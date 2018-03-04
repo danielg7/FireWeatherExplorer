@@ -18,10 +18,11 @@ mesowest::requestToken(apikey = api_key)
 
 # Read In Station Data ----------------------------------------------------
 
-readInWeather <- function(StationID, Start, End)
+readInWeather <- function(StationID, County, Start, End)
 {
 downloadedWeather <- mesowest::mw(service = 'timeseries',
-            stid=StationID,
+            stid = StationID,
+            county = County,
             start = Start,
             end = End,
             units="ENGLISH")
