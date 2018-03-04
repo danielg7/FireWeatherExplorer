@@ -12,13 +12,10 @@ library("leaflet")
 
 
 navbarPage("Fire Weather Explorer", id = "tabs",
-          
-
-# Station Selection ------------------------------------------------
            tabPanel("Station Selection",
                     sidebarLayout(
                       sidebarPanel(
-                        includeMarkdown("includedText/mainPageText.md")
+                        includeMarkdown("includedText/mainPageText.md"),
                         selectInput('State',
                                     label = "Select State",
                                     choices = sort(as.character(unique(AllRAWS$STATION$STATE)))),
@@ -32,10 +29,124 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                  tags$h1("Fire Weather Explorer")),
                         leafletOutput("station_location"),
                         htmlOutput("metadata")
-           ))
+                        )
+                      )
            ),
-
-navbarMenu("Output", menuName = "Output")
+           tabPanel(title = "Data Quality Plots", value = "Diagnostic",
+                    sidebarLayout(
+                      #
+                      # This section adds a series of radio buttons that define
+                      # which plots to show in the data quality check plots.
+                      #
+                      sidebarPanel(
+                        radioButtons(inputId = "diagnosticType",
+                                     label = "Choose plot type:",
+                                     choiceNames = c("Relative Humidity", "Temperature", "Wind Speed"),
+                                     choiceValues = c("RH","Temp","Wind_Speed"),
+                                     selected = "RH"),
+                        #
+                        # Include diagnostic plot verbiage by importing a markdown file.
+                        #
+                        includeMarkdown("includedText/diagnosticPlots.md")
+                                ),
+                      mainPanel(
+                        #
+                        # This section adds a series of panels that are responsive to
+                        # radio buttons (above). They also check to see if the wx data are
+                        # available for plotting.
+                        #
+                        tags$div(class="header", checked = NA,
+                                 tags$h1("Data Quality Plots")),
+                        conditionalPanel("input.diagnosticType == 'RH'",
+                                         plotOutput("rh_ts_plot")),
+                        conditionalPanel("input.diagnosticType == 'Temp'",
+                                         plotOutput("temp_ts_plot")),
+                        conditionalPanel("input.diagnosticType == 'Wind_Speed'",
+                                         plotOutput("wind_ts_plot"))
+                                )
+                              )
+                    ),
+           
+           tabPanel("Prescription Plots", id = "Subset",
+                    sidebarLayout(
+                      sidebarPanel(
+                        radioButtons(inputId = "rxPlotType",
+                                     label = "Choose plot to display:",
+                                     choiceNames = c("Hours in Prescription", "Percent of Months in Prescription"),
+                                     choiceValues = c("hoursRx","histMonthRx"),
+                                     selected = "hoursRx"),
+                        
+                        includeMarkdown("includedText/subsetPlots.md"),
+                        
+                        # Month Sliders
+                        
+                        sliderInput("months",
+                         "Months to use:",
+                         min = 1,
+                         max = 12, value = c(9,12)),
+                        
+                        # Hour Sliders
+                        
+                        sliderInput("hours",
+                         "Hours to use:",
+                         min = 1,
+                         max = 24, value = c(8,18)),
+                        
+                        # RH Sliders
+                        
+                        sliderInput("rh",
+                         "Relative Humidity:",
+                         min = 1,
+                         max = 100,
+                         value = c(15,35)),
+                        
+                        # Temp Sliders
+                        
+                        sliderInput("temp",
+                                    "Temperature (F):",
+                                    min = -15,
+                                    max = 110,
+                                    value = c(15,75)),
+                        
+                        # Wind Sliders
+                        
+                        sliderInput("wind",
+                         "Wind speeds (mph, 20 ft):",
+                         min = 0,
+                         max = 50, value = c(8,25)),
+                        
+                        # Wind Direction Check Boxes
+                        
+                        checkboxGroupInput("wind_directions", "Wind Directions:",
+                                c("N",
+                                  "NNE",
+                                  "NE",
+                                  "ENE",
+                                  "E",
+                                  "ESE",
+                                  "SE",
+                                  "SSE",
+                                  "S",
+                                  "SSW",
+                                  "SW",
+                                  "WSW",
+                                  "W",
+                                  "WNW",
+                                  "NW",
+                                  "NNW"),
+                                selected = "E")),
+                      
+                      # Main Panel Ouput
+                      
+                      mainPanel(tags$div(class="header", checked = NA,
+                                         tags$h1("Prescription Plots")),
+                                conditionalPanel("input.rxPlotType == 'hoursRx'",
+                                                 plotOutput("rh_ts_sub_plot")),
+                                conditionalPanel("input.rxPlotType == 'histMonthRx'",
+                                                 plotOutput("rhplot"))
+                                )
+                      )
+                    )
 )
 
 
