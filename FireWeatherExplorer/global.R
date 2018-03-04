@@ -21,7 +21,8 @@ wx_dl <- NULL
 stationMetadata <- NULL
 combinedWx <- NULL
 wx_sub_countHours <- NULL
-buttonClicker <- 0
+StartDate_formatted <- NULL
+EndDate_formatted <- NULL
 
 
 universalTheme <- function(){ 

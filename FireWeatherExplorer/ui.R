@@ -67,6 +67,57 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                               )
                     ),
            
+           tabPanel(title = "Station Summary Data", value = "Summary",
+                    sidebarLayout(
+                      #
+                      # This section adds a series of radio buttons that define
+                      # which plots to show in the station data check plots.
+                      #
+                      sidebarPanel(
+                        radioButtons(inputId = "monthlyType",
+                                     label = "Choose monthly plot type:",
+                                     choiceNames = c("Relative Humidity", "Temperature", "Wind Speed"),
+                                     choiceValues = c("RH","Temp","Wind_Speed"),
+                                     selected = "RH"),
+                        radioButtons(inputId = "hourlyType",
+                                     label = "Choose hourly plot type:",
+                                     choiceNames = c("Relative Humidity", "Temperature", "Wind Speed"),
+                                     choiceValues = c("RH","Temp","Wind_Speed"),
+                                     selected = "RH")#,
+                        #
+                        # Include diagnostic plot verbiage by importing a markdown file.
+                        #
+                        #includeMarkdown("includedText/diagnosticPlots.md")
+                      ),
+                      mainPanel(
+                        #
+                        # This section adds a series of panels that are responsive to
+                        # radio buttons (above). They also check to see if the wx data are
+                        # available for plotting.
+                        #
+                        
+                        tags$div(class="header", checked = NA,
+                                 tags$h1("Station Summary Plots")),
+                        tabsetPanel(
+                          tabPanel("Monthly Plots",
+                                   conditionalPanel("input.monthlyType == 'RH'",
+                                                    plotOutput("month_rh")),
+                                   conditionalPanel("input.monthlyType == 'Temp'",
+                                                    plotOutput("month_temp")),
+                                   conditionalPanel("input.monthlyType == 'Wind_Speed'",
+                                                    plotOutput("month_wind"))), 
+                          tabPanel("Hourly Plots",
+                                   conditionalPanel("input.hourlyType == 'RH'",
+                                                    plotOutput("hour_rh")),
+                                   conditionalPanel("input.hourlyType == 'Temp'",
+                                                    plotOutput("hour_temp")),
+                                   conditionalPanel("input.hourlyType == 'Wind_Speed'",
+                                                    plotOutput("hour_wind"))
+                                   )
+                          )
+                        )
+                    )
+           ), 
            tabPanel("Prescription Plots", id = "Subset",
                     sidebarLayout(
                       sidebarPanel(

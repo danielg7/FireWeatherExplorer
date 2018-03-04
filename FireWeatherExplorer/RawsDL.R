@@ -22,7 +22,6 @@ readInWeather <- function(StationID, County, Start, End)
 {
 downloadedWeather <- mesowest::mw(service = 'timeseries',
             stid = StationID,
-            county = County,
             start = Start,
             end = End,
             units="ENGLISH")
