@@ -121,9 +121,9 @@ server <- function(input, output, session) {
                                     # Wind Sliders
                                     
                                     sliderInput("wind",
-                                                "Wind speeds:",
+                                                "Wind speeds (mph, 20 ft):",
                                                 min = 0,
-                                                max = 50, value = c(8,12)),
+                                                max = 50, value = c(8,25)),
                                     
                                     
                                     # Wind Direction Check Boxes
@@ -184,7 +184,7 @@ server <- function(input, output, session) {
         labs(title = "Temperature Records",
              subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
         facet_grid(facets = Year ~ .)+
-        theme_bw(base_size=18, base_family="Avenir")
+        theme_bw(base_size=15, base_family="Avenir")
       tempPlot
     })
     
@@ -197,7 +197,7 @@ server <- function(input, output, session) {
         labs(title = "Relative Humidity Records",
              subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
         facet_grid(facets = Year ~ .)+
-        theme_bw(base_size=18, base_family="Avenir")
+        theme_bw(base_size=15, base_family="Avenir")
       rhPlot
     })
     
@@ -210,7 +210,7 @@ server <- function(input, output, session) {
         labs(title = "Wind Speed Records",
              subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
         facet_grid(facets = Year ~ .)+
-        theme_bw(base_size=18, base_family="Avenir")
+        theme_bw(base_size=15, base_family="Avenir")
       wsPlot
     })
     
@@ -224,12 +224,12 @@ server <- function(input, output, session) {
     wx_Context <- wx_df %>%
       filter(Month >= input$months[1]) %>%
       filter(Month <= input$months[2]) %>%
+      filter(Hour >= input$hours[1] & Hour <= input$hours[2]) %>%
       mutate(Conditions = "Window")
     
     wx_Rx <- wx_Context %>%
       filter(RH >= input$rh[1] & RH <= input$rh[2]) %>%
       filter(Wind_Direction %in% input$wind_directions) %>%
-      filter(Hour >= input$hours[1] & Hour <= input$hours[2]) %>%
       filter(Wind_Speed >= input$wind[1] & Wind_Speed <= input$wind[2]) %>%
       mutate(Conditions = "In Prescription")
     
@@ -260,28 +260,38 @@ server <- function(input, output, session) {
       
       wxSubsetByConditions()
 
-      rh_sub_Plot <- ggplot(data = combinedWx, aes(x = DayOfYear, y = RH/100, size = Conditions, color = Conditions, alpha = Conditions))+
-        geom_point()+
-        scale_alpha_manual(values = c("In Prescription" = 1,
-                                      "Window" = .1,
-                                      "Not Matching" = .10), guide = FALSE)+
-        scale_x_date("Day of the Year",
-                     labels = function(x) format(x, "%d-%b"))+
-        scale_y_continuous("Relative Humidity (%)",
-                           labels = scales::percent,
-                           limits = c(0,1))+
-        scale_size_manual(values = c("In Prescription" = 2,
-                                     "Window" = 1,
-                                     "Not Matching" = 1), guide = FALSE)+
-        scale_color_manual(values = c("In Prescription" = "red",
-                                      "Not Matching" = "gray",
-                                      "Window" = "blue"))+
-        labs(title = "Relative Humidity Records",
-             subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-        facet_grid(facets = Year ~ .,
-                   scales = "free_x")+
-        theme_bw(base_size=18, base_family="Avenir")
-      rh_sub_Plot})
+      rh_sub_Plot <- ggplot(data = combinedWx, aes(x = DayOfYear, y = Hour, fill = Conditions))+
+        geom_tile()+
+        scale_fill_manual(values = c("In Prescription" = "red", "Not Matching" = "gray", "Window" = "blue"))+
+        facet_grid(facets = Year ~ ., scales = "free_x")+
+        scale_y_continuous(name = "Hours",limits = c(0,24))+
+        scale_x_date("Day of the Year", labels = function(x) format(x, "%d-%b"))+
+        theme_bw(base_size=15, base_family="Avenir")
+      rh_sub_Plot
+      
+      # rh_sub_Plot <- ggplot(data = combinedWx, aes(x = DayOfYear, y = RH/100, size = Conditions, color = Conditions, alpha = Conditions))+
+      #   geom_point()+
+      #   scale_alpha_manual(values = c("In Prescription" = 1,
+      #                                 "Window" = .1,
+      #                                 "Not Matching" = .10), guide = FALSE)+
+      #   scale_x_date("Day of the Year",
+      #                labels = function(x) format(x, "%d-%b"))+
+      #   scale_y_continuous("Relative Humidity (%)",
+      #                      labels = scales::percent,
+      #                      limits = c(0,1))+
+      #   scale_size_manual(values = c("In Prescription" = 2,
+      #                                "Window" = 1,
+      #                                "Not Matching" = 1), guide = FALSE)+
+      #   scale_color_manual(values = c("In Prescription" = "red",
+      #                                 "Not Matching" = "gray",
+      #                                 "Window" = "blue"))+
+      #   labs(title = "Relative Humidity Records",
+      #        subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+      #   facet_grid(facets = Year ~ .,
+      #              scales = "free_x")+
+      #   theme_bw(base_size=15, base_family="Avenir")
+      # rh_sub_Plot
+      })
     
     output$rhplot <- renderPlot({
       
@@ -293,7 +303,7 @@ server <- function(input, output, session) {
                              labels = scales::percent)+
         geom_bar(color = "black", width = 1, stat = "identity", position="dodge")+
         scale_x_continuous(breaks = seq(1,12,1),limits = c(1,12))+
-        theme_bw(base_size=18, base_family="Avenir")+
+        theme_bw(base_size=15, base_family="Avenir")+
         theme(legend.position="none")
       histPlot
     })
