@@ -5,15 +5,14 @@ source("./RawsDL.R")
 
 # Read in Stations --------------------------------------------------------
 
-#Larimer <- mesowest::mw('metadata',
- #                       county="Larimer",
-  #                      state="CO",
-   #                     network=2,
-    #                    status='ACTIVE')
-
 AllRAWS <- mesowest::mw('metadata',
                         network=2,
                         status='ACTIVE', complete = TRUE)
+
+# Read in States --------------------------------------------------------
+
+State_List <- sort(as.character(unique(AllRAWS$STATION$STATE)))
+State_List <- State_List[!State_List %in% "AS"]
 
 
 wx_df <- NULL
