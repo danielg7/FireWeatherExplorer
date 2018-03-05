@@ -39,22 +39,29 @@ server <- function(input, output, session) {
   
   observeEvent(input$pickStations, {
  
-
+    withProgress(message = 'Downloading data...', value = 0, {
+    
     isolate({
     StartDate_formatted <<- paste(input$Year[1],"01","01","1200",sep = "")
     EndDate_formatted <<- paste(input$Year[2],"12","12","2300",sep = "")
-    
-    showNotification(paste("Searching for:\n",StartDate_formatted," - ",EndDate_formatted,sep=""))
-    
+
+    incProgress(amount = .5)
     
     wx_dl <<- readInWeather(StationID = StationID,
                            Start = StartDate_formatted,
                            End = EndDate_formatted)
     
+    incProgress(amount = .25,
+                message = "Cleaning data...")
     
     wx_df <<- fxn_weatherCleaner(wx_dl)
+    
+    incProgress(amount = .25,
+                message = "Done!")
+    
     })
     
+    })
     
     # Plots for diagnostics
     
@@ -105,9 +112,13 @@ server <- function(input, output, session) {
     if(is.null(wx_df)){}
     else{
       output$month_temp <- renderPlot({
-        month_temp_plot <- ggplot(data = wx_df, aes(x = DayOfYear, y = Temp, group = Month))+
-          geom_boxplot()+
-          scale_x_date("Day of the Year", labels = function(x) format(x, "%b"),,date_breaks = "1 month")+
+        month_temp_plot <- ggplot(data = wx_df, aes(x = Month, y = Temp, group = Month))+
+          geom_boxplot(position = "identity")+
+          scale_x_continuous(breaks = seq(1,12,1),
+                             labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
+                             limits = c(0.5,12.5))+
+          #scale_x_date("Day of the Year", labels = function(x) format(x, "%b"),
+           #            date_breaks = "1 month")+
           scale_y_continuous("Temperature (F)")+
           labs(title = "Temperature Records by Month",
                subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
@@ -116,9 +127,11 @@ server <- function(input, output, session) {
       })
       
       output$month_rh <- renderPlot({
-        month_rh_plot <- ggplot(data = wx_df, aes(x = DayOfYear, y = RH/100, group = Month))+
+        month_rh_plot <- ggplot(data = wx_df, aes(x = Month, y = RH/100, group = Month))+
           geom_boxplot()+
-          scale_x_date("Day of the Year", labels = function(x) format(x, "%b"),date_breaks = "1 month")+
+          scale_x_continuous(breaks = seq(1,12,1),
+                              labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
+                              limits = c(0.5,12.5))+
           scale_y_continuous("Relative Humidity (%)", labels = scales::percent,limits = c(0,1))+
           labs(title = "Relative Humidity Records by Month",
                subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
@@ -126,9 +139,11 @@ server <- function(input, output, session) {
         month_rh_plot
       })
         output$month_wind <- renderPlot({
-          month_wind_plot <- ggplot(data = wx_df, aes(x = DayOfYear, y = Wind_Speed, group = Month))+
+          month_wind_plot <- ggplot(data = wx_df, aes(x = Month, y = Wind_Speed, group = Month))+
             geom_boxplot()+
-            scale_x_date("Day of the Year", labels = function(x) format(x, "%b"),date_breaks = "1 month")+
+            scale_x_continuous(breaks = seq(1,12,1),
+                               labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
+                               limits = c(0.5,12.5))+
             scale_y_continuous("Wind Speed (mph)")+
             labs(title = "Wind Speed Records by Month",
                  subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
@@ -237,29 +252,39 @@ server <- function(input, output, session) {
                          max(wx_df$DayOfYear)))
       
 
-      rh_sub_Plot <- ggplot(data = filter(combinedWx, Conditions %in% "In Prescription"), aes(x = DayOfYear, y = hms))+
+      rh_sub_Plot <- ggplot(data = filter(combinedWx, Conditions %in% "In Prescription"), aes(x = Month, y = Hour))+
         annotate("rect",
-                 xmin = min(filter(combinedWx, Conditions %in% "Window")$DayOfYear),
-                 xmax = max(filter(combinedWx, Conditions %in% "Window")$DayOfYear),
-                 ymin = min(filter(combinedWx, Conditions %in% "Window")$hms),
-                 ymax = max(filter(combinedWx, Conditions %in% "Window")$hms),
+                 xmin = min(filter(combinedWx, Conditions %in% "Window")$Month),
+                 xmax = max(filter(combinedWx, Conditions %in% "Window")$Month),
+                 ymin = min(filter(combinedWx, Conditions %in% "Window")$Hour),
+                 ymax = max(filter(combinedWx, Conditions %in% "Window")$Hour),
                  alpha = .2, color = "green")+
         stat_density_2d(aes(fill = ..level..),
                         geom = "polygon", alpha = 0.1)+
-        scale_fill_continuous("Probability Density")+
+        scale_fill_continuous("Probability Density", guide = FALSE)+
         geom_count(fill = "red", alpha = .5, pch=21)+
         scale_size_area(name = "Number of Hours In Prescription",
                         max_size = 5,
                         breaks = c(seq(1,10,1)))+
-        scale_x_date("Day of the Year",
-                     labels = function(x) format(x, "%b"),
-                     date_breaks = "1 month",
-                     limits = as.Date(c(min(wx_df$DayOfYear),
-                                        max(wx_df$DayOfYear))))+
-        scale_y_datetime("Hours", date_breaks = "1 hour",
-                         labels = function(x) format(x, "%H%M"),
-                         limits = lims_dt)+
+        # scale_x_date("Day of the Year",
+        #              labels = function(x) format(x, "%b"),
+        #              date_breaks = "1 month",
+        #              limits = as.Date(c(min(wx_df$DayOfYear),
+        #                                 max(wx_df$DayOfYear))))+
+        scale_x_continuous("Months",breaks = seq(1,12,1),
+                           labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
+                           limits = c(0.5,12.5))+
+        scale_y_continuous("Hour", breaks = seq(0,23,1),
+                           limits = c(0,23),
+                           labels = c("0000","0100","0200","0300","0400","0500","0600","0700","0800","0900","1000","1100",
+                                      "1200","1300","1400","1500","1600","1700","1800","1900","2000","2100","2200",
+                                      "2300"))+
+       # # scale_y_datetime("Hours", date_breaks = "1 hour",
+        #                 labels = function(x) format(x, "%H%M"),
+         #                limits = lims_dt)+
         theme_bw(base_size=15, base_family="Avenir")+
+        theme(legend.position="bottom",
+              legend.direction = "vertical")+
         labs(title = "Hours That Match Prescription Parameters", subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))
       rh_sub_Plot
       })
@@ -273,7 +298,9 @@ server <- function(input, output, session) {
           scale_y_continuous("Percent of Hours Matching Conditions (by month)",
                              labels = scales::percent)+
         geom_bar(color = "black", width = 1, stat = "identity", position="dodge")+
-        scale_x_continuous(breaks = seq(1,12,1),limits = c(1,12))+
+          scale_x_continuous(breaks = seq(1,12,1),
+                             labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
+                             limits = c(0.5,12.5))+
         theme_bw(base_size=15, base_family="Avenir")+
         theme(legend.position="none")
       histPlot

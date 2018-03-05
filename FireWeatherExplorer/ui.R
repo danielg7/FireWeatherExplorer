@@ -193,7 +193,7 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                       mainPanel(tags$div(class="header", checked = NA,
                                          tags$h1("Prescription Plots")),
                                 conditionalPanel("input.rxPlotType == 'hoursRx'",
-                                                 plotOutput("rh_ts_sub_plot")),
+                                                 plotOutput("rh_ts_sub_plot", height = "500px")),
                                 conditionalPanel("input.rxPlotType == 'histMonthRx'",
                                                  plotOutput("rhplot"))
                                 )
