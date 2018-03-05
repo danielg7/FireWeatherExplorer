@@ -10,8 +10,9 @@
 library("shiny")
 library("leaflet")
 
-
 navbarPage("Fire Weather Explorer", id = "tabs",
+           
+           # Some text to align checkboxes later
            tabPanel("Station Selection",
                     sidebarLayout(
                       sidebarPanel(
@@ -198,11 +199,18 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                 )
                       )
                     ),
-           tabPanel("About", id = "About",
-                    mainPanel(
-                      includeMarkdown("includedText/about.md")
+           navbarMenu("About",
+                      tabPanel("Fire Weather Explorer", id = "About",
+                               mainPanel(
+                                 includeMarkdown("includedText/about.md")
+                                 )
+                               ),
+                      tabPanel("Help", id = "Help",
+                               mainPanel(
+                                 includeMarkdown("includedText/help.md")
+                               )
                       )
-                    )
+           )
 )
 
 

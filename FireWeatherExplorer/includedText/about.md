@@ -1,3 +1,5 @@
+![](kestrel.jpg)
+
 # About
 
 FireWeatherExplorer is an actively developed project to make it easier to determine when conditions may occur that are conducive for prescribed fires. The project uses fire weather data from (Mesowest)[mesowest.utah.edu] (using the [Mesowest API](https://synopticlabs.org/api/mesonet/reference/) and the [`mesowest` R package](https://github.com/fickse/mesowest)) as inputs. Currently, only [RAWS stations](https://raws.nifc.gov/) are included. 
@@ -10,29 +12,20 @@ FireWeatherExplorer is an actively developed project to make it easier to determ
 
 ## Purpose
 
+It can be difficult to know when conditions are likely for a prescribed fire. This tool aims to make it easier to sift through historical weather data to find trends in prescription windows.
+
 ## Development
 
-## Help
+This project is actively in development. Please see the [Github repository](https://github.com/danielg7/FireWeatherExplorer) for development questions and source code. 
 
-This project is ongoing and may any number of bugs. If you find something strange, please contact the developers.
+For known bugs and feature requests, see the [Github issues page](https://github.com/danielg7/FireWeatherExplorer/issues).
 
-### Station Selection
-
-### Data Quality Plots
-
-#### Relative Humidity
-
-#### Temperature
-
-#### Wind Speed
-
-### Prescription Plots
-
-#### Hours In Prescription
-
-#### Percent of Months in Prescription
+This project is ongoing and may contain any number of bugs. If you find something strange, please contact the developers.
 
 ## Contact
+
+Daniel Godwin
+danielg7@gmail.com
 
 
 
