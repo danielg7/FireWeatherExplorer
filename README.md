@@ -2,7 +2,7 @@
 
 FireWeatherExplorer is a Shiny app that reads in Mesowest RAWS stations for visualization and exploration. 
 
-Currently Hosted at: https://danielg7.shinyapps.io/FireWeatherExplorer/[https://danielg7.shinyapps.io/FireWeatherExplorer/]
+Currently Hosted at: [https://danielg7.shinyapps.io/FireWeatherExplorer/](https://danielg7.shinyapps.io/FireWeatherExplorer/)
 
 
 **Current Status**  

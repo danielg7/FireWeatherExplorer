@@ -17,129 +17,295 @@ library("hms")
 
 server <- function(input, output, session) {
 
- 
+  output$emptyPlot <- renderPlot({
+    emptyPlot <- ggplot()+
+      geom_blank()+
+      xlim(0, 10)+
+      ylim(0, 10)+
+      annotate(geom = "text", x = 5, y = 5, label = "No station selected.\nGo back to 'Station Selection' and pick one out!")+
+      theme_void()
+    emptyPlot
+    })
+
+# React to ‘State’ changing -----------------------------------------------
   
   observeEvent(input$State, {
     output$County <- renderUI({
+      
+      #
+      # Once the state input changes, add counties to the list by pulling them from the station list
+      #
+      
+      County_List <- sort(as.character(unique(AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$STATE == input$State)])))
+      
       selectInput("County",
                   label = "Select County",
-                  choices = sort(as.character(unique(AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$STATE == input$State)]))),
-                  selected = "CO")
+                  choices = County_List,
+                  selected = "Larimer")
       })
   })
   
+
+# React to ‘County’ changing ----------------------------------------------
+
+  
   observeEvent(input$County, {
     output$station <- renderUI({
+      
+      #
+      # Once the 'County' input changes, add stations to the list by pulling them from the station list
+      #
+      
+      Station_List <- unique(AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == input$County)])
+      
       selectInput(label = "Select Stations",
                   inputId = "station",
-                  choices = unique(AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == input$County)]),
-                  selected = "Larimer")
+                  choices = Station_List,
+                  selected = "READFEATHER")
     })
   })
   
-  observeEvent(input$pickStations, {
- 
-    withProgress(message = 'Downloading data...', value = 0, {
-    
-    isolate({
-    StartDate_formatted <<- paste(input$Year[1],"01","01","1200",sep = "")
-    EndDate_formatted <<- paste(input$Year[2],"12","12","2300",sep = "")
 
-    incProgress(amount = .5)
+# React to ‘Submit’ button pressed for picking stations -------------------
+  
+  observeEvent(input$pickStations, {
     
-    wx_dl <<- readInWeather(StationID = StationID,
+    #
+    # Add a progress bar to tell you that the data are downloading
+    #
+ 
+    withProgress(message = 'Downloading station data...', value = 0, {
+      
+      #
+      # 'Isolate' the station data so that it only gets called when the buton is pressed
+      #
+      
+      isolate({
+        
+        #
+        # Format the year data into a format for the station data. 
+        #
+        
+        StartDate_formatted <<- paste(input$Year[1],"01","01","1200",sep = "")
+        EndDate_formatted <<- paste(input$Year[2],"12","12","2300",sep = "")
+        
+        #
+        # Increment the progress bar a little
+        #
+        
+        incProgress(amount = .5)
+        
+        #
+        # Pass stationID and parsed dates to the readInWeather function (see RawsDL.R for more)
+        #
+        
+        wx_dl <<- readInWeather(StationID = StationID,
                            Start = StartDate_formatted,
                            End = EndDate_formatted)
-    
-    incProgress(amount = .25,
+        
+        #
+        # Increment the progress bar a little
+        #
+        
+        incProgress(amount = .25,
                 message = "Cleaning data...")
-    
-    wx_df <<- fxn_weatherCleaner(wx_dl)
-    
-    incProgress(amount = .25,
+        
+        #
+        # Pass the output data from the reader function to a cleaner function.
+        #
+        
+        wx_df <<- fxn_weatherCleaner(wx_dl)
+        
+        #
+        # Final increment...let them know it's done!
+        #
+        
+        incProgress(amount = .25,
                 message = "Done!")
-    
+        })
     })
     
-    })
+    # Data Quality Plots ------------------------------------------------------
     
-    # Plots for diagnostics
+    #
+    # Check to see if the initial dataframe is empty or not. If it is, don't plot anything
+    #
     
- if(is.null(wx_df)){}
+    if(is.null(wx_df)){
+    }
     else{
-    output$temp_ts_plot <- renderPlot({
-      tempPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = Temp))+
-        geom_point(alpha = 0.25, size = 0.25)+
-        scale_x_date("Day of the Year", labels = function(x){format(x, "%b")})+
-        scale_y_continuous("Temperature (F)")+
-        labs(title = "Temperature Records",
-             subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-        facet_grid(facets = Year ~ .)+
-        theme_bw(base_size=15, base_family="Avenir")
-      tempPlot
-    }, height = 100 * length(unique(wx_df$Year)), units = "px")
+      
+      #
+      # Temperature Timeseries Plot
+      #
+      
+      output$temp_ts_plot <- renderPlot({
+        tempPlot <- ggplot(data = wx_df,
+                           aes(x = DayOfYear,
+                               y = Temp))+
+          geom_point(alpha = 0.25, size = 0.25)+
+          scale_x_date("Day of the Year", labels = function(x){format(x, "%b")})+
+          scale_y_continuous("Temperature (F)")+
+          labs(title = "Temperature Records",
+               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+          facet_grid(facets = Year ~ .)+
+          theme_bw(base_size=15,
+                   base_family="Avenir")
+        tempPlot
+        }, height = 100 * length(unique(wx_df$Year)), units = "px") # Scale the size of the plots with the number of years to plot
     
-    output$rh_ts_plot <- renderPlot({
-      rhPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = RH/100))+
-        geom_point(alpha = 0.25, size = 0.25)+
-        scale_x_date("Day of the Year",
-                     labels = function(x) format(x, "%b"),date_breaks = "1 month")+
-        scale_y_continuous("Relative Humidity (%)", labels = scales::percent,limits = c(0,1))+
-        labs(title = "Relative Humidity Records",
-             subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-        facet_grid(facets = Year ~ .)+
-        theme_bw(base_size=15, base_family="Avenir")
-      rhPlot
-    }, height = 100 * length(unique(wx_df$Year)), units = "px")
-    
-    output$wind_ts_plot <- renderPlot({
-      wsPlot <- ggplot(data = wx_df, aes(x = DayOfYear, y = Wind_Speed))+
-        geom_point(alpha = 0.25, size = 0.25)+
-        scale_x_date("Day of the Year",
-                     labels = function(x) format(x, "%b"),date_breaks = "1 month")+
-        scale_y_continuous("Wind Speed (mph)")+
-        labs(title = "Wind Speed Records",
-             subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-        facet_grid(facets = Year ~ .)+
-        theme_bw(base_size=15, base_family="Avenir")
-      wsPlot
-    }, height = 100 * length(unique(wx_df$Year)), units = "px")
-    
+      #
+      # RH Time Series Pots
+      #
+      
+      output$rh_ts_plot <- renderPlot({
+        rhPlot <- ggplot(data = wx_df,
+                         aes(x = DayOfYear,
+                             y = RH/100))+
+          geom_point(alpha = 0.25, size = 0.25)+
+          scale_x_date("Day of the Year",
+                       labels = function(x) format(x, "%b"),
+                       date_breaks = "1 month")+
+          scale_y_continuous("Relative Humidity (%)",
+                             labels = scales::percent,limits = c(0,1))+
+          labs(title = "Relative Humidity Records",
+               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+          facet_grid(facets = Year ~ .)+
+          theme_bw(base_size=15,
+                   base_family="Avenir")
+        rhPlot
+        }, height = 100 * length(unique(wx_df$Year)), units = "px") # Dynamically scale size of plot
+      
+      #
+      # 1 Hr Fuel Moisture Time Series Pots
+      #
+      
+      output$fmc1_ts_plot <- renderPlot({
+        FMC1_Plot <- ggplot(data = wx_df,
+                         aes(x = DayOfYear,
+                             y = FuelMoisture_1hr/100))+
+          geom_point(alpha = 0.25, size = 0.25)+
+          scale_x_date("Day of the Year",
+                       labels = function(x) format(x, "%b"),
+                       date_breaks = "1 month")+
+          scale_y_continuous("1 Hour Fuel Moisture (%)",
+                             labels = scales::percent)+
+          labs(title = "1 Hr Fuel Moistures (Calculated)",
+               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+          facet_grid(facets = Year ~ .)+
+          theme_bw(base_size=15,
+                   base_family="Avenir")
+        FMC1_Plot
+      }, height = 100 * length(unique(wx_df$Year)), units = "px") # Dynamically scale size of plot
+      
+      #
+      # 10 Hr Fuel Moisture Time Series Pots
+      #
+      
+      output$fmc10_ts_plot <- renderPlot({
+        if(FMCMissing == TRUE)
+          FMStatement <- "Calculated"
+        if(FMCMissing == FALSE)
+          FMStatement <- "Instrumented"
+        
+        FMC10_Plot <- ggplot(data = wx_df,
+                            aes(x = DayOfYear,
+                                y = FuelMoisture_10hr/100))+
+          geom_point(alpha = 0.25, size = 0.25)+
+          scale_x_date("Day of the Year",
+                       labels = function(x) format(x, "%b"),
+                       date_breaks = "1 month")+
+          scale_y_continuous("10 Hour Fuel Moisture (%)",
+                             labels = scales::percent)+
+          labs(title = paste("10 Hr Fuel Moistures (",FMStatement,")", sep = ""),
+               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+          facet_grid(facets = Year ~ .)+
+          theme_bw(base_size=15,
+                   base_family="Avenir")
+        FMC10_Plot
+      }, height = 100 * length(unique(wx_df$Year)), units = "px") # Dynamically scale size of plot
+      
+      
+      #
+      # Wind speed time series plot
+      #
+      
+      output$wind_ts_plot <- renderPlot({
+        wsPlot <- ggplot(data = wx_df,
+                         aes(x = DayOfYear,
+                             y = Wind_Speed))+
+          geom_point(alpha = 0.25,
+                     size = 0.25)+
+          scale_x_date("Day of the Year",
+                       labels = function(x) format(x, "%b"),
+                       date_breaks = "1 month")+
+          scale_y_continuous("Wind Speed (mph)")+
+          labs(title = "Wind Speed Records",
+               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+          facet_grid(facets = Year ~ .)+
+          theme_bw(base_size=15,
+                   base_family="Avenir")
+        wsPlot
+      }, height = 100 * length(unique(wx_df$Year)), units = "px")
+      
     }
     
-    # Station Plots
+
+# Station Summary Plots ---------------------------------------------------
     
     if(is.null(wx_df)){}
     else{
+      
+      #
+      # Monthly temperature histogram
+      #
+      
       output$month_temp <- renderPlot({
-        month_temp_plot <- ggplot(data = wx_df, aes(x = Month, y = Temp, group = Month))+
+        month_temp_plot <- ggplot(data = wx_df,
+                                  aes(x = Month,
+                                      y = Temp,
+                                      group = Month))+
           geom_boxplot(position = "identity")+
           scale_x_continuous(breaks = seq(1,12,1),
                              labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
                              limits = c(0.5,12.5))+
-          #scale_x_date("Day of the Year", labels = function(x) format(x, "%b"),
-           #            date_breaks = "1 month")+
           scale_y_continuous("Temperature (F)")+
           labs(title = "Temperature Records by Month",
                subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-          theme_bw(base_size=15, base_family="Avenir")
+          theme_bw(base_size=15,
+                   base_family="Avenir")
         month_temp_plot
       })
       
+      #
+      # Monthly RH plot
+      #
+      
       output$month_rh <- renderPlot({
-        month_rh_plot <- ggplot(data = wx_df, aes(x = Month, y = RH/100, group = Month))+
+        month_rh_plot <- ggplot(data = wx_df, aes(x = Month,
+                                                  y = RH/100,
+                                                  group = Month))+
           geom_boxplot()+
           scale_x_continuous(breaks = seq(1,12,1),
                               labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
                               limits = c(0.5,12.5))+
-          scale_y_continuous("Relative Humidity (%)", labels = scales::percent,limits = c(0,1))+
+          scale_y_continuous("Relative Humidity (%)",
+                             labels = scales::percent,limits = c(0,1))+
           labs(title = "Relative Humidity Records by Month",
                subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-          theme_bw(base_size=15, base_family="Avenir")
+          theme_bw(base_size=15,
+                   base_family="Avenir")
         month_rh_plot
       })
+      
+      #
+      # Monthly wind speed plots
+      #
+      
         output$month_wind <- renderPlot({
-          month_wind_plot <- ggplot(data = wx_df, aes(x = Month, y = Wind_Speed, group = Month))+
+          month_wind_plot <- ggplot(data = wx_df, aes(x = Month,
+                                                      y = Wind_Speed,
+                                                      group = Month))+
             geom_boxplot()+
             scale_x_continuous(breaks = seq(1,12,1),
                                labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
@@ -147,14 +313,22 @@ server <- function(input, output, session) {
             scale_y_continuous("Wind Speed (mph)")+
             labs(title = "Wind Speed Records by Month",
                  subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-            theme_bw(base_size=15, base_family="Avenir")
+            theme_bw(base_size=15,
+                     base_family="Avenir")
           month_wind_plot
       })
         
+        #
+        # Hourly Temperature Plots
+        #
+        
         output$hour_temp <- renderPlot({
-          hour_temp_plot <- ggplot(data = wx_df, aes(x = Hour, y = Temp, group = Hour))+
+          hour_temp_plot <- ggplot(data = wx_df, aes(x = Hour,
+                                                     y = Temp,
+                                                     group = Hour))+
             geom_boxplot()+
-            scale_x_continuous("Hour", breaks = seq(0,23,1),
+            scale_x_continuous("Hour",
+                               breaks = seq(0,23,1),
                                limits = c(-.45,23.45),
                                labels = c("0000","0100","0200","0300","0400","0500","0600","0700","0800","0900","1000","1100",
                                           "1200","1300","1400","1500","1600","1700","1800","1900","2000","2100","2200",
@@ -162,29 +336,47 @@ server <- function(input, output, session) {
             scale_y_continuous("Temperature (F)")+
             labs(title = "Temperature Records by Hour",
                  subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-            theme_bw(base_size=15, base_family="Avenir")
+            theme_bw(base_size=15,
+                     base_family="Avenir")
           hour_temp_plot
         })
         
+        #
+        # Hourly RH Plots
+        #
+        
         output$hour_rh <- renderPlot({
-          hour_rh_plot <- ggplot(data = wx_df, aes(x = Hour, y = RH/100, group = Hour))+
+          hour_rh_plot <- ggplot(data = wx_df, aes(x = Hour,
+                                                   y = RH/100,
+                                                   group = Hour))+
             geom_boxplot()+
-            scale_x_continuous("Hour", breaks = seq(0,23,1),
+            scale_x_continuous("Hour",
+                               breaks = seq(0,23,1),
                                limits = c(-.45,23.45),
                                labels = c("0000","0100","0200","0300","0400","0500","0600","0700","0800","0900","1000","1100",
                                           "1200","1300","1400","1500","1600","1700","1800","1900","2000","2100","2200",
                                           "2300"))+
-            scale_y_continuous("Relative Humidity (%)", labels = scales::percent,limits = c(0,1))+
+            scale_y_continuous("Relative Humidity (%)",
+                               labels = scales::percent,limits = c(0,1))+
             labs(title = "Relative Humidity Records by Hour",
                  subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-            theme_bw(base_size=15, base_family="Avenir")+
+            theme_bw(base_size=15,
+                     base_family="Avenir")+
             theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
           hour_rh_plot
         })
+        
+        #
+        # Hourly Windspeed Plots
+        #
+        
         output$hour_wind <- renderPlot({
-          hour_wind_plot <- ggplot(data = wx_df, aes(x = Hour, y = Wind_Speed, group = Hour))+
+          hour_wind_plot <- ggplot(data = wx_df, aes(x = Hour,
+                                                     y = Wind_Speed,
+                                                     group = Hour))+
             geom_boxplot()+
-            scale_x_continuous("Hour", breaks = seq(0,23,1),
+            scale_x_continuous("Hour",
+                               breaks = seq(0,23,1),
                                limits = c(-.45,23.45),
                                labels = c("0000","0100","0200","0300","0400","0500","0600","0700","0800","0900","1000","1100",
                                           "1200","1300","1400","1500","1600","1700","1800","1900","2000","2100","2200",
@@ -192,34 +384,62 @@ server <- function(input, output, session) {
             scale_y_continuous("Wind Speed (mph)")+
             labs(title = "Wind Speed Records by Hour",
                  subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-            theme_bw(base_size=15, base_family="Avenir")
+            theme_bw(base_size=15,
+                     base_family="Avenir")
           hour_wind_plot
         })
       
     }
     
+    
+    #
     # Shift focus after drawing station
+    #
     
     updateTabsetPanel(session = session, inputId =  "tabs",
                       selected = "Diagnostic")
+    
+    
+    wxSubsetByConditions()
     
   })
   
   # Subset Data Plots -----------------------------------------------
   
+  #
+  # Clean Data Based on Prescription
+  #
+  
   wxSubsetByConditions <- reactive({
+    
+    #
+    # Filter based on month and hour to make the "prescribed burn window" (wx_Context)
+    #
+    
     wx_Context <- wx_df %>%
       filter(Month >= input$months[1]) %>%
       filter(Month <= input$months[2]) %>%
       filter(Hour >= input$hours[1] & Hour <= input$hours[2]) %>%
       mutate(Conditions = "Window")
     
+    #
+    # Filter the "prescribed burn window" (wx_Context) based on fire weather variables
+    # This will determine prescription areas.
+    #
+    
     wx_Rx <- wx_Context %>%
       filter(RH >= input$rh[1] & RH <= input$rh[2]) %>%
       filter(Wind_Direction %in% input$wind_directions) %>%
       filter(Wind_Speed >= input$wind[1] & Wind_Speed <= input$wind[2]) %>%
       filter(Temp >= input$temp[1] & Temp <= input$temp[2]) %>%
+      filter(FuelMoisture_1hr >= input$FMC1[1] & FuelMoisture_1hr <= input$FMC1[2]) %>%
+      filter(FuelMoisture_10hr >= input$FMC10[1] & FuelMoisture_10hr <= input$FMC10[2]) %>%
       mutate(Conditions = "In Prescription")
+    
+    #
+    # Combine dataframe of values in the 
+    # This will determine prescription areas.
+    #
     
     wx_Context <- wx_Context[,c("DateTime","Conditions")]
     wx_Rx <- wx_Rx[,c("DateTime","Conditions")]
@@ -240,20 +460,20 @@ server <- function(input, output, session) {
     
     combinedWx$Year <<- year(combinedWx$DateTime)
     
-    #save(combinedWx,file="combinedWx.Rda")
+    print(head(combinedWx))
     
     wx_sub_countHours <<- combinedWx %>%
       count(Month, Conditions) %>%
       group_by(Month) %>%
       mutate(Percent = n / sum(n))  
     
-  })
+ })
  
-  if(is.null(wx_df)){}
-  else{ 
+#  if(is.null(wx_df)){}
+ # else{ 
     output$rh_ts_sub_plot <- renderPlot({
       
-      wxSubsetByConditions()
+    wxSubsetByConditions()
       
      lims_dt <- as.POSIXct(strptime(c(min(filter(combinedWx, Conditions %in% "Not Matching")$hms),
                                           max(filter(combinedWx, Conditions %in% "Not Matching")$hms)),
@@ -276,11 +496,6 @@ server <- function(input, output, session) {
         scale_size_area(name = "Number of Hours In Prescription",
                         max_size = 5,
                         breaks = c(seq(1,10,1)))+
-        # scale_x_date("Day of the Year",
-        #              labels = function(x) format(x, "%b"),
-        #              date_breaks = "1 month",
-        #              limits = as.Date(c(min(wx_df$DayOfYear),
-        #                                 max(wx_df$DayOfYear))))+
         scale_x_continuous("Months",breaks = seq(1,12,1),
                            labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
                            limits = c(0.5,12.5))+
@@ -301,7 +516,7 @@ server <- function(input, output, session) {
     
     output$rhplot <- renderPlot({
       
-        wxSubsetByConditions()
+       wxSubsetByConditions()
       
         histPlot <- ggplot(data = filter(wx_sub_countHours, Conditions == "In Prescription"),
                            aes(x = Month, y = Percent, fill = Conditions))+
@@ -315,9 +530,20 @@ server <- function(input, output, session) {
         theme(legend.position="none")
       histPlot
     })
-  }   
+ # }   
   
-
+    output$prescriptionTable = DT::renderDataTable({
+      output <- combinedWx %>%
+        filter(Conditions %in% "In Prescription") %>%
+        select(-one_of(c("DayOfYear","Conditions","hms","Hour","Month","Year"))) %>%
+        select(DateTime, Temp, RH, Wind_Speed, Wind_Direction, FuelMoisture_10hr, FuelMoisture_1hr) %>%
+        rename(FM_10hr = FuelMoisture_10hr) %>%
+        rename(FM_1hr = FuelMoisture_1hr) %>%
+        mutate(FM_1hr = round(FM_1hr, digits = 2))
+      
+      datatable(output) %>% formatDate(1, method = "toLocaleString", params = list("en-US", "hourCycle: '24h'"))
+    }, width = '500px')
+    
   
 # Change Based on Station Selection ---------------------------------------------------------
 
@@ -326,8 +552,8 @@ server <- function(input, output, session) {
     # Fetch metadata
     
     StationID <<- AllRAWS$STATION$STID[which(AllRAWS$STATION$NAME == input$station & AllRAWS$STATION$COUNTY == input$County)]
+
     
-   # StationID <<- Larimer$STATION$STID[which(Larimer$STATION$NAME == input$station)]
     stationMetadata <<- wxStationMetadata(StationID = StationID)
     
     # Draw the map
@@ -344,18 +570,18 @@ server <- function(input, output, session) {
     # Draw the metadata
     
     output$metadata <- renderUI({
-    meta_StationName <- paste("Station Name: ", stationMetadata$STATION$NAME, " (",stationMetadata$STATION$STID,")", sep = "")
-    meta_type <- paste("Station Type:", stationMetadata$STATION$SHORTNAME)
-    meta_GACC <- paste("GACC:", stationMetadata$STATION$GACC)
-    meta_FireWxZone <- paste("NWS Fire Weather Zone:", stationMetadata$STATION$NWSFIREZONE)
-    meta_Range <- paste("Period of Record: ",
-                        min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
-                        " - ",
-                        max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
-                        sep = "")
-    meta_LatLong <- paste("Lat / Long :",as.character(stationMetadata$STATION$LATITUDE),", ",as.character(stationMetadata$STATION$LONGITUDE),
+      meta_StationName <- paste("Station Name: ", stationMetadata$STATION$NAME, " (",stationMetadata$STATION$STID,")", sep = "")
+      meta_type <- paste("Station Type:", stationMetadata$STATION$SHORTNAME)
+      meta_GACC <- paste("GACC:", stationMetadata$STATION$GACC)
+      meta_FireWxZone <- paste("NWS Fire Weather Zone:", stationMetadata$STATION$NWSFIREZONE)
+      meta_Range <- paste("Period of Record: ",
+                          min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
+                          " - ",
+                          max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
                           sep = "")
-    HTML(paste('<br/>',meta_type, meta_Range, meta_LatLong, meta_GACC, meta_FireWxZone, sep = '<br/>'))
+      meta_LatLong <- paste("Lat / Long :",as.character(stationMetadata$STATION$LATITUDE),", ",as.character(stationMetadata$STATION$LONGITUDE),
+                            sep = "")
+      HTML(paste('<br/>',meta_type, meta_Range, meta_LatLong, meta_GACC, meta_FireWxZone, sep = '<br/>'))
     })
     
     # Draw the metadata title
@@ -377,9 +603,10 @@ server <- function(input, output, session) {
                             max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD)))),
                   sep = "")
       })
-    
-})
+
+  }) 
 }
+
   
  
 

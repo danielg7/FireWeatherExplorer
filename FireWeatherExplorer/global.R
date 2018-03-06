@@ -22,8 +22,4 @@ combinedWx <- NULL
 wx_sub_countHours <- NULL
 StartDate_formatted <- NULL
 EndDate_formatted <- NULL
-
-
-universalTheme <- function(){ 
-  theme_light(base_size=12, base_family="Avenir")
-}
+FMCMissing <- NULL
