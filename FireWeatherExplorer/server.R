@@ -17,16 +17,6 @@ library("hms")
 
 server <- function(input, output, session) {
 
-  output$emptyPlot <- renderPlot({
-    emptyPlot <- ggplot()+
-      geom_blank()+
-      xlim(0, 10)+
-      ylim(0, 10)+
-      annotate(geom = "text", x = 5, y = 5, label = "No station selected.\nGo back to 'Station Selection' and pick one out!")+
-      theme_void()
-    emptyPlot
-    })
-
 # React to ‘State’ changing -----------------------------------------------
   
   observeEvent(input$State, {
@@ -121,19 +111,15 @@ server <- function(input, output, session) {
     
     # Data Quality Plots ------------------------------------------------------
     
-    #
-    # Check to see if the initial dataframe is empty or not. If it is, don't plot anything
-    #
-    
-    if(is.null(wx_df)){
-    }
-    else{
-      
       #
       # Temperature Timeseries Plot
       #
       
       output$temp_ts_plot <- renderPlot({
+        validate(
+          need(input$pickStations, 'Please select a station!')
+        )
+        
         tempPlot <- ggplot(data = wx_df,
                            aes(x = DayOfYear,
                                y = Temp))+
@@ -153,6 +139,10 @@ server <- function(input, output, session) {
       #
       
       output$rh_ts_plot <- renderPlot({
+        validate(
+          need(input$pickStations, 'Please select a station!')
+        )
+        
         rhPlot <- ggplot(data = wx_df,
                          aes(x = DayOfYear,
                              y = RH/100))+
@@ -175,6 +165,10 @@ server <- function(input, output, session) {
       #
       
       output$fmc1_ts_plot <- renderPlot({
+        validate(
+          need(input$pickStations, 'Please select a station!')
+        )
+        
         FMC1_Plot <- ggplot(data = wx_df,
                          aes(x = DayOfYear,
                              y = FuelMoisture_1hr/100))+
@@ -197,6 +191,10 @@ server <- function(input, output, session) {
       #
       
       output$fmc10_ts_plot <- renderPlot({
+        validate(
+          need(input$pickStations, 'Please select a station!')
+        )
+        
         if(FMCMissing == TRUE)
           FMStatement <- "Calculated"
         if(FMCMissing == FALSE)
@@ -225,6 +223,10 @@ server <- function(input, output, session) {
       #
       
       output$wind_ts_plot <- renderPlot({
+        validate(
+          need(input$pickStations, 'Please select a station!')
+        )
+        
         wsPlot <- ggplot(data = wx_df,
                          aes(x = DayOfYear,
                              y = Wind_Speed))+
@@ -241,20 +243,19 @@ server <- function(input, output, session) {
                    base_family="Avenir")
         wsPlot
       }, height = 100 * length(unique(wx_df$Year)), units = "px")
-      
-    }
     
 
 # Station Summary Plots ---------------------------------------------------
-    
-    if(is.null(wx_df)){}
-    else{
       
       #
       # Monthly temperature histogram
       #
       
       output$month_temp <- renderPlot({
+        validate(
+          need(input$pickStations, 'Please select a station!')
+        )
+        
         month_temp_plot <- ggplot(data = wx_df,
                                   aes(x = Month,
                                       y = Temp,
@@ -276,6 +277,11 @@ server <- function(input, output, session) {
       #
       
       output$month_rh <- renderPlot({
+        validate(
+          need(input$pickStations, 'Please select a station!')
+        )
+        
+        
         month_rh_plot <- ggplot(data = wx_df, aes(x = Month,
                                                   y = RH/100,
                                                   group = Month))+
@@ -297,6 +303,10 @@ server <- function(input, output, session) {
       #
       
         output$month_wind <- renderPlot({
+          validate(
+            need(input$pickStations, 'Please select a station!')
+          )
+          
           month_wind_plot <- ggplot(data = wx_df, aes(x = Month,
                                                       y = Wind_Speed,
                                                       group = Month))+
@@ -317,6 +327,10 @@ server <- function(input, output, session) {
         #
         
         output$hour_temp <- renderPlot({
+          validate(
+            need(input$pickStations, 'Please select a station!')
+          )
+          
           hour_temp_plot <- ggplot(data = wx_df, aes(x = Hour,
                                                      y = Temp,
                                                      group = Hour))+
@@ -340,6 +354,10 @@ server <- function(input, output, session) {
         #
         
         output$hour_rh <- renderPlot({
+          validate(
+            need(input$pickStations, 'Please select a station!')
+          )
+          
           hour_rh_plot <- ggplot(data = wx_df, aes(x = Hour,
                                                    y = RH/100,
                                                    group = Hour))+
@@ -365,6 +383,10 @@ server <- function(input, output, session) {
         #
         
         output$hour_wind <- renderPlot({
+          validate(
+            need(input$pickStations, 'Please select a station!')
+          )
+          
           hour_wind_plot <- ggplot(data = wx_df, aes(x = Hour,
                                                      y = Wind_Speed,
                                                      group = Hour))+
@@ -383,7 +405,6 @@ server <- function(input, output, session) {
           hour_wind_plot
         })
       
-    }
     
     
     #
@@ -406,10 +427,7 @@ server <- function(input, output, session) {
   
   wxSubsetByConditions <- reactive({
     
-    
-    if(is.null(wx_df)){}
-    else{ 
-    
+    if(input$pickStations){
     #
     # Filter based on month and hour to make the "prescribed burn window" (wx_Context)
     #
@@ -458,19 +476,23 @@ server <- function(input, output, session) {
     
     combinedWx$Year <<- year(combinedWx$DateTime)
     
-    print(head(combinedWx))
-    
     wx_sub_countHours <<- combinedWx %>%
       count(Month, Conditions) %>%
       group_by(Month) %>%
-      mutate(Percent = n / sum(n))  
+      mutate(Percent = n / sum(n))
+    } 
+    else{
+      return(NULL)
     }
-    
  })
  
-
     output$rh_ts_sub_plot <- renderPlot({
-    wxSubsetByConditions()
+      validate(
+        need(input$pickStations, 'Please select a station!')
+      )
+      
+      
+      wxSubsetByConditions()
       
       
       
@@ -512,6 +534,9 @@ server <- function(input, output, session) {
       })
     
     output$rhplot <- renderPlot({
+      validate(
+        need(input$pickStations, 'Please select a station!')
+      )
       
        wxSubsetByConditions()
       
@@ -524,12 +549,18 @@ server <- function(input, output, session) {
                              labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
                              limits = c(0.5,12.5))+
         theme_bw(base_size=15, base_family="Avenir")+
+          labs(title = "Percent of Hours That Match Prescription Parameters Per Month", subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
         theme(legend.position="none")
       histPlot
     })
- # }   
   
     output$prescriptionTable = DT::renderDataTable({
+      validate(
+        need(input$pickStations, 'Please select a station!')
+      )
+      
+      wxSubsetByConditions()
+      
       output <- combinedWx %>%
         filter(Conditions %in% "In Prescription") %>%
         select(-one_of(c("DayOfYear","Conditions","hms","Hour","Month","Year"))) %>%
