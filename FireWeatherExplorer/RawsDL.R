@@ -20,10 +20,15 @@ mesowest::requestToken(apikey = api_key)
 
 readInWeather <- function(StationID, County, Start, End)
 {
+  
+  StartDate_formatted <<- paste(Start,"01","01","1200",sep = "")
+  EndDate_formatted <<- paste(End,"12","12","2300",sep = "")
+  
+  
   downloadedWeather <- mesowest::mw(service = 'timeseries',
                                     stid = StationID,
-                                    start = Start,
-                                    end = End,
+                                    start = StartDate_formatted,
+                                    end = EndDate_formatted,
                                     units="ENGLISH")
   
   return(downloadedWeather)

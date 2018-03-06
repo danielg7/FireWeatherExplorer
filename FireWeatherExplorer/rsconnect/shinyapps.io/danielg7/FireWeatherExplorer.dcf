@@ -5,9 +5,9 @@ account: danielg7
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 292163
-bundleId: 1253245
+bundleId: 1254254
 url: https://danielg7.shinyapps.io/FireWeatherExplorer/
-when: 1520261315.97923
+when: 1520303073.78707
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: test.txt

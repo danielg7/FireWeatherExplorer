@@ -23,3 +23,20 @@ wx_sub_countHours <- NULL
 StartDate_formatted <- NULL
 EndDate_formatted <- NULL
 FMCMissing <- NULL
+windDirList <- 
+  c("N",
+    "NNE",
+    "NE",
+    "ENE",
+    "E",
+    "ESE",
+    "SE",
+    "SSE",
+    "S",
+    "SSW",
+    "SW",
+    "WSW",
+    "W",
+    "WNW",
+    "NW",
+    "NNW")

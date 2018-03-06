@@ -189,24 +189,9 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                    
                                    # Wind Direction Check Boxes
                                    
-                                   checkboxGroupInput("wind_directions", "Wind Directions:",
-                                                      c("N",
-                                                        "NNE",
-                                                        "NE",
-                                                        "ENE",
-                                                        "E",
-                                                        "ESE",
-                                                        "SE",
-                                                        "SSE",
-                                                        "S",
-                                                        "SSW",
-                                                        "SW",
-                                                        "WSW",
-                                                        "W",
-                                                        "WNW",
-                                                        "NW",
-                                                        "NNW"),
-                                                      selected = "E")
+                                   checkboxGroupInput("wind_directions", "Wind Directions:",windDirList,
+                                                      selected = "E"),
+                                   actionLink("selectall","Select All") 
                                    )
                           )
                         ),

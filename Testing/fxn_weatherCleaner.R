@@ -1,5 +1,5 @@
 # Compare two datasets
-SD <- "201501012300"
+SD <- "201101012300"
 ED <- "201701012300"
 goodWx <- readInWeather(StationID = "RSOC2",
                         Start = SD,

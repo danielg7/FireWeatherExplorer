@@ -82,12 +82,6 @@ server <- function(input, output, session) {
       
       isolate({
         
-        #
-        # Format the year data into a format for the station data. 
-        #
-        
-        StartDate_formatted <<- paste(input$Year[1],"01","01","1200",sep = "")
-        EndDate_formatted <<- paste(input$Year[2],"12","12","2300",sep = "")
         
         #
         # Increment the progress bar a little
@@ -100,8 +94,8 @@ server <- function(input, output, session) {
         #
         
         wx_dl <<- readInWeather(StationID = StationID,
-                           Start = StartDate_formatted,
-                           End = EndDate_formatted)
+                           Start = input$Year[1],
+                           End = input$Year[2])
         
         #
         # Increment the progress bar a little
@@ -412,6 +406,10 @@ server <- function(input, output, session) {
   
   wxSubsetByConditions <- reactive({
     
+    
+    if(is.null(wx_df)){}
+    else{ 
+    
     #
     # Filter based on month and hour to make the "prescribed burn window" (wx_Context)
     #
@@ -466,14 +464,15 @@ server <- function(input, output, session) {
       count(Month, Conditions) %>%
       group_by(Month) %>%
       mutate(Percent = n / sum(n))  
+    }
     
  })
  
-#  if(is.null(wx_df)){}
- # else{ 
+
     output$rh_ts_sub_plot <- renderPlot({
-      
     wxSubsetByConditions()
+      
+      
       
      lims_dt <- as.POSIXct(strptime(c(min(filter(combinedWx, Conditions %in% "Not Matching")$hms),
                                           max(filter(combinedWx, Conditions %in% "Not Matching")$hms)),
@@ -494,8 +493,8 @@ server <- function(input, output, session) {
         scale_fill_continuous("Probability Density", guide = FALSE)+
         geom_count(fill = "red", alpha = .5, pch=21)+
         scale_size_area(name = "Number of Hours In Prescription",
-                        max_size = 5,
-                        breaks = c(seq(1,10,1)))+
+                        max_size = 7,
+                        breaks = c(seq(1,7,1)))+
         scale_x_continuous("Months",breaks = seq(1,12,1),
                            labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
                            limits = c(0.5,12.5))+
@@ -504,9 +503,7 @@ server <- function(input, output, session) {
                            labels = c("0000","0100","0200","0300","0400","0500","0600","0700","0800","0900","1000","1100",
                                       "1200","1300","1400","1500","1600","1700","1800","1900","2000","2100","2200",
                                       "2300"))+
-       # # scale_y_datetime("Hours", date_breaks = "1 hour",
-        #                 labels = function(x) format(x, "%H%M"),
-         #                limits = lims_dt)+
+        guides(size = guide_legend(ncol = 8))+
         theme_bw(base_size=15, base_family="Avenir")+
         theme(legend.position="bottom",
               legend.direction = "vertical")+
@@ -605,6 +602,21 @@ server <- function(input, output, session) {
       })
 
   }) 
+    
+    observe({
+      if(input$selectall == 0) return(NULL) 
+      else if (input$selectall%%2 == 0)
+      {
+        updateCheckboxGroupInput(session,"wind_directions","Wind Direction(s):",
+                                 choices = windDirList)
+      }
+      else
+      {
+        updateCheckboxGroupInput(session,"wind_directions","Wind Direction(s):",
+                                 choices = windDirList,
+                                 selected = windDirList)
+      }
+    })    
 }
 
   
