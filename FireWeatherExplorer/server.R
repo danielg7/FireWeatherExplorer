@@ -638,12 +638,12 @@ server <- function(input, output, session) {
       if(input$selectall == 0) return(NULL) 
       else if (input$selectall%%2 == 0)
       {
-        updateCheckboxGroupInput(session,"wind_directions","Wind Direction(s):",
+        updateCheckboxGroupInput(session,"wind_directions","",
                                  choices = windDirList)
       }
       else
       {
-        updateCheckboxGroupInput(session,"wind_directions","Wind Direction(s):",
+        updateCheckboxGroupInput(session,"wind_directions","",
                                  choices = windDirList,
                                  selected = windDirList)
       }

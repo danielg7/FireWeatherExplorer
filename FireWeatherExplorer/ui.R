@@ -10,9 +10,43 @@
 library("shiny")
 library("leaflet")
 
+# tweaks, a list object to set up multicols for checkboxGroupInput
+tweaks <- 
+  list(tags$head(tags$style(HTML("
+                                 .multicol { 
+                                 height: 150px;
+                                 -webkit-column-count: 3; /* Chrome, Safari, Opera */ 
+                                 -moz-column-count: 3;    /* Firefox */ 
+                                 column-count: 3; 
+                                 -moz-column-fill: balanced;
+                                 -column-fill: balanced;
+                                 -margin-top: 0px !important;
+                                 -webkit-margin-after: 0px !important; 
+                                 }
+                                .checkbox{
+                                  margin-top: 0px !important;
+                                 -margin-left: 0px;
+                                 -webkit-margin-after: 0px !important; 
+                                }
+                                .checkbox-inline {margin-left: 0px;
+                                                  -margin-top: 0px !important;
+                                                  -margin: 0 !important;
+                                                  -webkit-margin-after: 0px !important; }
+                                 ")) 
+  ))
+
+controls <-
+  list(strong("Wind Direction(s):"),
+       tags$div(align = 'left', 
+                class = 'multicol', 
+                checkboxGroupInput(inputId  = 'wind_directions', 
+                                   label    = "", 
+                                   choices  = windDirList,
+                                   selected = "E",
+                                   inline   = FALSE))) 
+
 navbarPage("Fire Weather Explorer", id = "tabs",
            
-           # Some text to align checkboxes later
            tabPanel("Station Selection",
                     sidebarLayout(
                       sidebarPanel(
@@ -179,7 +213,7 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                                max = 60,
                                                value = c(5,12))
                                    ),
-                          tabPanel(title = "Wind",
+                          tabPanel(title = "Wind",tweaks,
                                    # Wind Sliders
                                    
                                    sliderInput("wind",
@@ -188,9 +222,9 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                                max = 50, value = c(8,25)),
                                    
                                    # Wind Direction Check Boxes
-                                   
-                                   checkboxGroupInput("wind_directions", "Wind Directions:",windDirList,
-                                                      selected = "E"),
+                                   controls,
+                                  # checkboxGroupInput("wind_directions", "Wind Directions:",windDirList,
+                                   #                   selected = "E"),
                                    actionLink("selectall","Select All") 
                                    )
                           )
