@@ -9,6 +9,14 @@ AllRAWS <- mesowest::mw('metadata',
                         network=2,
                         status='ACTIVE', complete = TRUE)
 
+AllLocations <- data.frame("StationName" = AllRAWS$STATION$NAME,
+                           "StationID" = AllRAWS$STATION$STID,
+                           "Lat" = as.numeric(AllRAWS$STATION$LATITUDE),
+                           "Long" = as.numeric(AllRAWS$STATION$LONGITUDE),
+                           "State" = AllRAWS$STATION$STATE,
+                           "County" = AllRAWS$STATION$COUNTY)
+AllLocations$DisplayName <- paste(AllLocations$StationName," (",AllLocations$StationID,")", sep = "")
+
 # Read in States --------------------------------------------------------
 
 State_List <- sort(as.character(unique(AllRAWS$STATION$STATE)))

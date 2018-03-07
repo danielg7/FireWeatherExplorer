@@ -28,7 +28,7 @@ server <- function(input, output, session) {
       
       County_List <- sort(as.character(unique(AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$STATE == input$State)])))
       
-      selectInput("County",
+      selectInput(inputId = "County",
                   label = "Select County",
                   choices = County_List,
                   selected = "Larimer")
@@ -51,7 +51,7 @@ server <- function(input, output, session) {
       selectInput(label = "Select Stations",
                   inputId = "station",
                   choices = Station_List,
-                  selected = "READFEATHER")
+                  selected = "REDFEATHER")
     })
   })
   
@@ -586,14 +586,27 @@ server <- function(input, output, session) {
     
     # Draw the map
     
+    
+    
     output$station_location <- renderLeaflet({
-      leaflet() %>%
+      map <-leaflet() %>%
         addProviderTiles(providers$OpenTopoMap,
                          options = providerTileOptions(noWrap = TRUE)
         ) %>%
-        addMarkers(label = stationMetadata$STATION$NAME,
-                   lat = as.numeric(stationMetadata$STATION$LATITUDE),
-                   lng = as.numeric(stationMetadata$STATION$LONGITUDE))})
+        addMarkers(label = AllLocations$DisplayName,
+                   lat = AllLocations$Lat,
+                   lng = AllLocations$Long,
+                   labelOptions = labelOptions(noHide = TRUE)) %>%
+        setView(lat = as.numeric(stationMetadata$STATION$LATITUDE),
+                lng = as.numeric(stationMetadata$STATION$LONGITUDE),
+                zoom = 13) %>%
+        addMiniMap(
+          tiles = providers$Esri.WorldStreetMap,
+          toggleDisplay = TRUE)
+      
+      map
+                
+  })
     
     # Draw the metadata
     
@@ -633,6 +646,51 @@ server <- function(input, output, session) {
       })
 
   }) 
+    
+    observeEvent(input$station_location_marker_click, {
+      click <- input$station_location_marker_click
+      
+      Station_Clicked <- AllLocations[which(AllLocations$Lat == click$lat & AllLocations$Long == click$lng), ]$StationName
+      State_Clicked <- AllLocations[which(AllLocations$Lat == click$lat & AllLocations$Long == click$lng), ]$State
+      County_Clicked <- AllLocations[which(AllLocations$Lat == click$lat & AllLocations$Long == click$lng), ]$County
+      
+      #print(paste(Station_Clicked,County_Clicked,State_Clicked))
+      
+      #
+      # Update station input
+      #
+      
+      Station_List <- unique(AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == State_Clicked & AllRAWS$STATION$COUNTY == County_Clicked)])
+      
+      updateSelectInput(session = session,
+                        inputId = "station",
+                        label = "Select Stations",
+                        choices = Station_List, 
+                        selected = Station_Clicked)
+      
+      #
+      # Update county input
+      #
+      
+      County_List <- sort(as.character(unique(AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$STATE == State_Clicked)])))
+      
+      updateSelectInput(session = session,
+                        inputId = "county",
+                        label = "Select County",
+                        choices = County_List, 
+                        selected = County_Clicked)
+      
+      #
+      # Update state input
+      #
+      
+      updateSelectInput(session = session,
+                        inputId = 'State',
+                        label = "Select State",
+                        choices = State_List,
+                        selected = State_Clicked)
+      
+    })
     
     observe({
       if(input$selectall == 0) return(NULL) 
