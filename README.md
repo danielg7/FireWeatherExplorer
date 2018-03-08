@@ -9,10 +9,22 @@ Currently Hosted at: [https://danielg7.shinyapps.io/FireWeatherExplorer/](https:
 
 Alpha!
 
-## Target Audience
+### Target Audience
 Prescribed fire users looking to better understand fire weather conditions through time at a given site.
 
-## Goals
+### Goals
 1. Easily identify stations for analysis
 2. Visualize fire weather conditions through time
 3. Output easily accessible weather data, graphs, and reports to assist in planning prescribed fire operations.
+
+### Usage
+
+To fill in more later...
+
+### Under The Hood
+
+To fill in more later...
+
+### Dependencies
+
+To fill in more later...  
