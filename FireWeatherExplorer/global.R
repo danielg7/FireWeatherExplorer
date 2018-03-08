@@ -23,6 +23,23 @@ State_List <- sort(as.character(unique(AllRAWS$STATION$STATE)))
 State_List <- State_List[!State_List %in% "AS"]
 
 
+
+stationRxValues <- data.frame(Wind.Low = NA,
+                              Wind.High = NA,
+                              FM1.Low = NA,
+                              FM1.High = NA,
+                              FM10.Low = NA,
+                              FM10.High = NA,
+                              RH.Low = NA,
+                              RH.High = NA,
+                              Temp.Low = NA,
+                              Temp.High = NA,
+                              Month.Low = NA,
+                              Month.High = NA,
+                              Hour.Low = NA,
+                              Hour.High = NA,
+                              WindDirections = NA)
+map <- NULL
 wx_df <- NULL
 wx_dl <- NULL
 stationMetadata <- NULL

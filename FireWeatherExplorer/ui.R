@@ -245,6 +245,15 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                 )
                       )
                     ),
+           tabPanel(title = "Generate Reports", value = "Reports",
+                    sidebarLayout(
+                    sidebarPanel(includeMarkdown("includedText/reportInfo.md")),
+                    mainPanel(textInput(inputId = "ProjectTitle",
+                                        label = "Enter Project Title"),
+                              downloadButton(outputId = "downloadReport",
+                                             label = "Download Report"))
+                    )
+           ),
            navbarMenu("About",
                       tabPanel("Fire Weather Explorer", id = "About",
                                mainPanel(

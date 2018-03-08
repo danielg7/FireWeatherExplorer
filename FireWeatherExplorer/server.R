@@ -106,6 +106,7 @@ server <- function(input, output, session) {
         
         incProgress(amount = .25,
                 message = "Done!")
+        
         })
     })
     
@@ -414,7 +415,6 @@ server <- function(input, output, session) {
     updateTabsetPanel(session = session, inputId =  "tabs",
                       selected = "Diagnostic")
     
-    
     wxSubsetByConditions()
     
   })
@@ -428,6 +428,9 @@ server <- function(input, output, session) {
   wxSubsetByConditions <- reactive({
     
     if(input$pickStations){
+      
+     
+      
     #
     # Filter based on month and hour to make the "prescribed burn window" (wx_Context)
     #
@@ -480,6 +483,9 @@ server <- function(input, output, session) {
       count(Month, Conditions) %>%
       group_by(Month) %>%
       mutate(Percent = n / sum(n))
+    
+    
+    
     } 
     else{
       return(NULL)
@@ -585,17 +591,15 @@ server <- function(input, output, session) {
     stationMetadata <<- wxStationMetadata(StationID = StationID)
     
     # Draw the map
-    
-    
-    
+
     output$station_location <- renderLeaflet({
-      map <-leaflet() %>%
+      map <<- leaflet() %>%
         addProviderTiles(providers$OpenTopoMap,
                          options = providerTileOptions(noWrap = TRUE)
         ) %>%
-        addMarkers(label = AllLocations$DisplayName,
-                   lat = AllLocations$Lat,
-                   lng = AllLocations$Long,
+        addMarkers(label = stationMetadata$STATION$NAME,
+                   lat = as.numeric(stationMetadata$STATION$LATITUDE),
+                   lng = as.numeric(stationMetadata$STATION$LONGITUDE),
                    labelOptions = labelOptions(noHide = TRUE)) %>%
         setView(lat = as.numeric(stationMetadata$STATION$LATITUDE),
                 lng = as.numeric(stationMetadata$STATION$LONGITUDE),
@@ -644,6 +648,9 @@ server <- function(input, output, session) {
                             max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD)))),
                   sep = "")
       })
+    
+
+    
 
   }) 
     
@@ -705,11 +712,61 @@ server <- function(input, output, session) {
                                  choices = windDirList,
                                  selected = windDirList)
       }
-    })    
+    })
+    
+
+# Generate Report ---------------------------------------------------------
+    
+    output$downloadReport <- downloadHandler(validate(
+      need(input$pickStations, 'Please select a station!')),
+      filename = "Report.docx",
+      content = function(file) {
+        
+        
+        stationRxValues$Wind.Low <<- input$wind[1]
+        stationRxValues$Wind.High <<- input$wind[2]
+        stationRxValues$WindDirections <<- input$wind_directions
+        stationRxValues$FM1.Low <<- input$FMC1[1]
+        stationRxValues$FM1.High <<- input$FMC1[2]
+        stationRxValues$FM10.Low <<- input$FMC10[1]
+        stationRxValues$FM10.High <<- input$FMC10[2]     
+        stationRxValues$Temp.Low <<- input$temp[1]
+        stationRxValues$Temp.High <<- input$temp[2]
+        stationRxValues$RH.Low <<- input$rh[1]
+        stationRxValues$RH.High <<- input$rh[2]
+        stationRxValues$Month.Low <<- input$months[1]
+        stationRxValues$Month.High <<- input$months[2]
+        stationRxValues$Hour.Low <<- input$hours[1]
+        stationRxValues$Hour.High <<- input$hours[2]
+        
+        src <- normalizePath('reportWireframe.Rmd')
+        
+        # temporarily switch to the temp dir, in case you do not have write
+        # permission to the current working directory
+        
+        owd <- setwd(tempdir())
+        on.exit(setwd(owd))
+        
+        file.copy(src, 'reportWireframe.Rmd', overwrite = TRUE)
+        
+        library(rmarkdown)
+        
+        out <- rmarkdown::render("reportWireframe.Rmd",
+                                 params = list(
+                                   projectName = input$ProjectTitle,
+                                   stationMetadata = stationMetadata,
+                                   weatherDataFrame = wx_df,
+                                   prescriptionRangesDataFrame = stationRxValues,
+                                   prescriptionDataFrame = combinedWx))
+        
+        
+        file.rename(out, file)
+      }
+    )    
 }
 
-  
- 
+
+
 
 
 
