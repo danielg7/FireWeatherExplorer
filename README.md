@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/danielg7/FireWeatherExplorer.svg?branch=master)](https://travis-ci.org/danielg7/FireWeatherExplorer)
+
 # FireWeatherExplorer
 
 FireWeatherExplorer is a Shiny app that reads in Mesowest RAWS stations for visualization and exploration. 
@@ -5,9 +7,9 @@ FireWeatherExplorer is a Shiny app that reads in Mesowest RAWS stations for visu
 Currently Hosted at: [https://danielg7.shinyapps.io/FireWeatherExplorer/](https://danielg7.shinyapps.io/FireWeatherExplorer/)
 
 
-**Current Status**  
+**Development Status**  
 
-Alpha!
+Open Beta
 
 ### Target Audience
 Prescribed fire users looking to better understand fire weather conditions through time at a given site.
