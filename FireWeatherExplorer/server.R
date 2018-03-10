@@ -559,13 +559,13 @@ server <- function(input, output, session) {
                         geom = "polygon", alpha = 0.1)+
         scale_fill_continuous("Probability Density", guide = FALSE)+
         geom_count(fill = "red", alpha = .5, pch=21)+
-        scale_size_area(name = "Percent of Hours In Prescription",
+        scale_size_area(name = "Number of Hours In Prescription\nAcross Period of Record",
                         max_size = 10,
                         breaks = seq(1,max(countRange$Count,na.rm = TRUE),1))+
         scale_x_continuous("Months",breaks = seq(1,12,1),
                            labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
                            limits = c(0.5,12.5))+
-        scale_y_continuous("Hour", breaks = seq(0,23,1),
+        scale_y_continuous("Hour of the Day", breaks = seq(0,23,1),
                            limits = c(0,23),
                            labels = c("0000","0100","0200","0300","0400","0500","0600","0700","0800","0900","1000","1100",
                                       "1200","1300","1400","1500","1600","1700","1800","1900","2000","2100","2200",
