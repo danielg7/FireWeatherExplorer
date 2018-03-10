@@ -6,7 +6,7 @@ source("./RawsDL.R")
 # Read in Stations --------------------------------------------------------
 
 AllRAWS <- mesowest::mw('metadata',
-                        network=2,
+                        network = c(1,2),
                         status='ACTIVE', complete = TRUE)
 
 AllLocations <- data.frame("StationName" = AllRAWS$STATION$NAME,
@@ -15,7 +15,9 @@ AllLocations <- data.frame("StationName" = AllRAWS$STATION$NAME,
                            "Long" = as.numeric(AllRAWS$STATION$LONGITUDE),
                            "State" = AllRAWS$STATION$STATE,
                            "County" = AllRAWS$STATION$COUNTY)
+
 AllLocations$DisplayName <- paste(AllLocations$StationName," (",AllLocations$StationID,")", sep = "")
+
 
 # Read in States --------------------------------------------------------
 

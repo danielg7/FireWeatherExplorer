@@ -77,8 +77,8 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                       sidebarPanel(
                         radioButtons(inputId = "diagnosticType",
                                      label = "Choose plot type:",
-                                     choiceNames = c("Relative Humidity", "Temperature", "Wind Speed", "1 Hr Fuel Moisture","10 hr Fuel Moisture"),
-                                     choiceValues = c("RH","Temp","Wind_Speed","FMC1","FMC10"),
+                                     choiceNames = c("Relative Humidity", "Temperature", "Wind Speed", "1 Hr Fuel Moisture","10 hr Fuel Moisture", "Hourly Precipitation"),
+                                     choiceValues = c("RH","Temp","Wind_Speed","FMC1","FMC10","HourlyPrecip"),
                                      selected = "RH"),
                         #
                         # Include diagnostic plot verbiage by importing a markdown file.
@@ -91,22 +91,27 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                         # radio buttons (above). They also check to see if the wx data are
                         # available for plotting.
                         #
-                        tags$div(class="header", checked = NA,
-                                 tags$h1("Data Quality Plots")),
-                        # conditionalPanel("nrow(wx_df) == 0",
-                        #                  plotOutput("emptyPlot")),
-                        conditionalPanel("input.diagnosticType == 'RH'",
-                                         plotOutput("rh_ts_plot")),
-                        conditionalPanel("input.diagnosticType == 'Temp'",
-                                         plotOutput("temp_ts_plot")),
-                        conditionalPanel("input.diagnosticType == 'Wind_Speed'",
-                                         plotOutput("wind_ts_plot")),
-                        conditionalPanel("input.diagnosticType == 'FMC1'",
-                                         plotOutput("fmc1_ts_plot")),
-                        conditionalPanel("input.diagnosticType == 'FMC10'",
-                                         plotOutput("fmc10_ts_plot"))
-                                )
-                              )
+                        tabsetPanel(
+                        tabPanel("Data Quality Plots",
+                          conditionalPanel("input.diagnosticType == 'RH'",
+                                           plotOutput("rh_ts_plot")),
+                          conditionalPanel("input.diagnosticType == 'Temp'",
+                                           plotOutput("temp_ts_plot")),
+                          conditionalPanel("input.diagnosticType == 'Wind_Speed'",
+                                           plotOutput("wind_ts_plot")),
+                          conditionalPanel("input.diagnosticType == 'FMC1'",
+                                           plotOutput("fmc1_ts_plot")),
+                          conditionalPanel("input.diagnosticType == 'FMC10'",
+                                           plotOutput("fmc10_ts_plot")),
+                          conditionalPanel("input.diagnosticType == 'HourlyPrecip'",
+                                           plotOutput("precip_ts_plot"))
+                        ),
+                        tabPanel("Data",
+                                 div(DT::dataTableOutput("totalPlot"), style = "font-size: 75%; width: 500px"))
+                        )
+                    )
+                    )
+                    
                     ),
            
            tabPanel(title = "Station Summary Data", value = "Summary",

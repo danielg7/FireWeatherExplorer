@@ -13,6 +13,7 @@ library("dplyr")
 library("DT")
 library("leaflet")
 library("hms")
+library("testthat")
 
 
 server <- function(input, output, session) {
@@ -136,6 +137,30 @@ server <- function(input, output, session) {
         }, height = 100 * length(unique(wx_df$Year)), units = "px") # Scale the size of the plots with the number of years to plot
     
       #
+      # Temperature Timeseries Plot
+      #
+      
+      output$precip_ts_plot <- renderPlot({
+        validate(
+          need(input$pickStations, 'Please select a station!')
+        )
+        
+        precipPlot <- ggplot(data = wx_df,
+                           aes(x = DayOfYear,
+                               y = HourlyRainfall))+
+          geom_point(alpha = 0.25, size = 0.25)+
+          scale_x_date("Day of the Year", labels = function(x){format(x, "%b")})+
+          scale_y_continuous("Hourly Precipitation (hr)")+
+          labs(title = "Precipitation",
+               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+          facet_grid(facets = Year ~ .)+
+          theme_bw(base_size=15,
+                   base_family="Avenir")
+        precipPlot
+      }, height = 100 * length(unique(wx_df$Year)), units = "px") # Scale the size of the plots with the number of years to plot
+      
+      
+      #
       # RH Time Series Pots
       #
       
@@ -245,7 +270,17 @@ server <- function(input, output, session) {
         wsPlot
       }, height = 100 * length(unique(wx_df$Year)), units = "px")
     
-
+      output$totalPlot = DT::renderDataTable({
+        validate(
+          need(input$pickStations, 'Please select a station!')
+        )
+        
+        wx_df_formatted <- wx_df %>%
+          select("DateTime","Temp","RH","Wind_Speed","Wind_Direction","FuelMoisture_1hr","FuelMoisture_10hr","HourlyRainfall")
+        
+        datatable(wx_df_formatted) %>% formatDate(1, method = "toLocaleString", params = list("en-US", "hourCycle: '24h'"))
+      }, width = '500px')
+      
 # Station Summary Plots ---------------------------------------------------
       
       #
@@ -508,6 +543,10 @@ server <- function(input, output, session) {
      lims_d <- as.Date(c(min(wx_df$DayOfYear),
                          max(wx_df$DayOfYear)))
       
+     countRange <- combinedWx %>%
+       filter(Conditions %in% "In Prescription") %>%
+       group_by(Month, Hour) %>%
+       summarise(Count = n())
 
       rh_sub_Plot <- ggplot(data = filter(combinedWx, Conditions %in% "In Prescription"), aes(x = Month, y = Hour))+
         annotate("rect",
@@ -520,9 +559,9 @@ server <- function(input, output, session) {
                         geom = "polygon", alpha = 0.1)+
         scale_fill_continuous("Probability Density", guide = FALSE)+
         geom_count(fill = "red", alpha = .5, pch=21)+
-        scale_size_area(name = "Number of Hours In Prescription",
-                        max_size = 7,
-                        breaks = c(seq(1,7,1)))+
+        scale_size_area(name = "Percent of Hours In Prescription",
+                        max_size = 10,
+                        breaks = seq(1,max(countRange$Count,na.rm = TRUE),1))+
         scale_x_continuous("Months",breaks = seq(1,12,1),
                            labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
                            limits = c(0.5,12.5))+
