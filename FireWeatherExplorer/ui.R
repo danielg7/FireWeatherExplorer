@@ -77,7 +77,7 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                       sidebarPanel(
                         radioButtons(inputId = "diagnosticType",
                                      label = "Choose plot type:",
-                                     choiceNames = c("Relative Humidity", "Temperature", "Wind Speed", "1 Hr Fuel Moisture","10 hr Fuel Moisture", "Hourly Precipitation"),
+                                     choiceNames = c("Relative Humidity", "Temperature", "Wind Speed", "1 Hr Fuel Moisture *Currently unreliable*","10 hr Fuel Moisture *Currently unreliable*", "Hourly Precipitation"),
                                      choiceValues = c("RH","Temp","Wind_Speed","FMC1","FMC10","HourlyPrecip"),
                                      selected = "RH"),
                         #
