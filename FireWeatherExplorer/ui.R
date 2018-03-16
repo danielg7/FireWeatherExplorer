@@ -107,7 +107,8 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                            plotOutput("precip_ts_plot"))
                         ),
                         tabPanel("Data",
-                                 div(DT::dataTableOutput("totalPlot"), style = "font-size: 75%; width: 500px"))
+                                 div(DT::dataTableOutput("totalPlot"), style = "font-size: 75%; width: 500px"),
+                                 downloadButton(outputId = "downloadWxData", "Download CSV of Data"))
                         )
                     )
                     )
@@ -256,7 +257,8 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                     mainPanel(textInput(inputId = "ProjectTitle",
                                         label = "Enter Project Title"),
                               downloadButton(outputId = "downloadReport",
-                                             label = "Download Report"))
+                                             label = "Download Report")
+                    )
                     )
            ),
            navbarMenu("About",

@@ -255,9 +255,11 @@ server <- function(input, output, session) {
         
         wsPlot <- ggplot(data = wx_df,
                          aes(x = DayOfYear,
-                             y = Wind_Speed))+
-          geom_point(alpha = 0.25,
+                             y = Wind_Speed,
+                             color = as.factor(Wind_Direction)))+
+          geom_point(#alpha = 0.25,
                      size = 0.25)+
+          scale_color_discrete("Wind Direction")+
           scale_x_date("Day of the Year",
                        labels = function(x) format(x, "%b"),
                        date_breaks = "1 month")+
@@ -266,20 +268,23 @@ server <- function(input, output, session) {
                subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
           facet_grid(facets = Year ~ .)+
           theme_bw(base_size=15,
-                   base_family="Avenir")
+                   base_family="Avenir")+
+          guides(size = guide_legend(ncol = 8), colour = guide_legend(override.aes = list(size = 3)))+
+          theme(legend.position="bottom",
+                legend.direction = "horizontal")
         wsPlot
-      }, height = 100 * length(unique(wx_df$Year)), units = "px")
+      }, height = 150 * length(unique(wx_df$Year)), units = "px")
     
       output$totalPlot = DT::renderDataTable({
-        validate(
-          need(input$pickStations, 'Please select a station!')
-        )
-        
-        wx_df_formatted <- wx_df %>%
-          select("DateTime","Temp","RH","Wind_Speed","Wind_Direction","FuelMoisture_1hr","FuelMoisture_10hr","HourlyRainfall")
-        
-        datatable(wx_df_formatted) %>% formatDate(1, method = "toLocaleString", params = list("en-US", "hourCycle: '24h'"))
-      }, width = '500px')
+                                               validate(
+                                                 need(input$pickStations, 'Please select a station!')
+                                               )
+                                               
+                                               wx_df_formatted <- wx_df %>%
+                                                 select("DateTime","Temp","RH","Wind_Speed","Wind_Direction","FuelMoisture_1hr","FuelMoisture_10hr","HourlyRainfall")
+                                               
+                                               datatable(wx_df_formatted, width = '500px') %>% formatDate(1, method = "toLocaleString", params = list("en-US", "hourCycle: '24h'"))
+                                             })
       
 # Station Summary Plots ---------------------------------------------------
       
@@ -801,7 +806,71 @@ server <- function(input, output, session) {
         
         file.rename(out, file)
       }
-    )    
+    )
+    
+
+# Download CSV ------------------------------------------------------------
+    
+    # Downloadable csv of selected dataset ----
+    output$downloadWxData <- downloadHandler(validate(
+      need(input$pickStations, 'Please select a station!')),
+      filename = "OutputData.csv",
+      content = function(file) {
+        
+        wx_df_formatted <- wx_df %>%
+          select("DateTime","Temp","RH","Wind_Speed","Wind_Direction","FuelMoisture_1hr","FuelMoisture_10hr","HourlyRainfall")
+        
+        meta_StationName <- paste("# Station Name: ", stationMetadata$STATION$NAME, " (",stationMetadata$STATION$STID,")", sep = "")
+        meta_type <- paste("# Station Type:", stationMetadata$STATION$SHORTNAME)
+        meta_GACC <- paste("# GACC:", stationMetadata$STATION$GACC)
+        meta_FireWxZone <- paste("# NWS Fire Weather Zone:", stationMetadata$STATION$NWSFIREZONE)
+        meta_Range <- paste("# Period of Record: ",
+                            min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
+                            " - ",
+                            max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
+                            sep = "")
+        
+        
+        header <- paste(meta_StationName,
+                        meta_type,
+                        meta_GACC,
+                        meta_FireWxZone,
+                        meta_Range, sep = "\r\n")
+        
+        src <- normalizePath('OutputData.csv')
+        
+        # temporarily switch to the temp dir, in case you do not have write
+        # permission to the current working directory
+        
+        owd <- setwd(tempdir())
+        on.exit(setwd(owd))
+        
+        
+        
+        
+        write.table(x = header,
+                    file = src,
+                    append = FALSE,
+                    row.names = FALSE,
+                    sep = ',',
+                    quote = FALSE)
+        
+        
+        write.table(x = wx_df_formatted,
+                    file = src,
+                    append = TRUE,
+                    row.names = FALSE,
+                    sep = ',',
+                    quote = FALSE)
+        
+        file.copy(from = src, to = file, overwrite = TRUE)
+        
+       # file.rename(out, file)
+        
+        #writeWeatherData(WeatherData = wx_df_formatted, stationMetadata = stationMetadata, file = file)
+      }
+    )
+    
 }
 
 
