@@ -28,8 +28,11 @@ readInWeather <- function(StationID, County, Start, End)
   }
   
   if(!is.numeric(End)){
-    stop("Start year must be a numeric value. Example: as.numeric(1997)")
+    stop("End year must be a numeric value. Example: as.numeric(1997)")
   }
+  
+  if(Start > End)
+    stop("Start year must be less than end year.")
   
   #
   # Formatting start and end date strings per what the Mesowest API requires.
