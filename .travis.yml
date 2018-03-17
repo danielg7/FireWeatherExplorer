@@ -32,3 +32,4 @@ before_install:
 
 script:
   - R -f run_tests.R
+  - R -f FireWeatherExplorer/tests/tests.R
