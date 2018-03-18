@@ -1,0 +1,29 @@
+Package: webdriver
+Title: 'WebDriver' Client for 'PhantomJS'
+Version: 1.0.4.9000
+Author: Ariya Hidayat, Gábor Csárdi, Gabor Torok, Ivan De Marino,
+    Robert Gieseke, Steven Masala, Winston Chang, Zack Weinberg
+Maintainer: Gábor Csárdi <csardi.gabor@gmail.com>
+Description: A client for the 'WebDriver' 'API'. It allows driving a
+    (probably headless) web browser, and can be used to test web
+    applications, including 'Shiny' apps. In theory it works with any
+    'WebDriver' implementation, but it was only tested with
+    'PhantomJS'.
+License: MIT + file LICENSE
+LazyData: true
+URL: https://github.com/rstudio/webdriver
+BugReports: https://github.com/rstudio/webdriver/issues
+RoxygenNote: 6.0.1
+Imports: callr (>= 2.0.0), base64enc, curl (>= 2.0), debugme, httr,
+    jsonlite, R6, showimage, utils, withr
+Suggests: covr, pingr, rprojroot, servr, testthat
+Encoding: UTF-8
+SystemRequirements: PhantomJS (http://phantomjs.org/)
+GithubRepo: webdriver
+GithubUsername: rstudio
+GithubRef: master
+GithubSHA1: 52facdbff635d3d0e03c84a6f6b2a17ed1526c3e
+Built: R 3.4.2; ; 2018-03-10 03:07:45 UTC; unix
+InstallAgent: packrat 0.4.8.1
+InstallSource: github
+Hash: 93e2b08a8304ef67a5b4cffdcab5b876

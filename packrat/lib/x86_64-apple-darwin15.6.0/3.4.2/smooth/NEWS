@@ -1,0 +1,562 @@
+smooth v2.4.1 (Release data: 2018-03-04)
+==============
+
+Bugfixes:
+* Fixed minor typos in the description of the package.
+* Fix in iss() for Interval-based model, when for some reason the probability becomes greater than one.
+* When the incorrect error/trend/season were specified in es() it would fail to work.
+* Fix for the cases, when the names of several xreg variables are the same.
+* When xreg is invalid and set to NULL, change xregDo to "use".
+
+
+smooth v2.4.0 (Release data: 2018-02-10)
+==============
+
+Changes:
+* ves() model now accepts intermittent parameter. So we can construct multivariate intermittent models.
+* ves() now prints information about the underlying intermittent model.
+* New estimator - MSCE (Mean Squared Cumulative Error). Needed in cases of cumulative demand.
+
+Bugfixes:
+* ves(): Initial values for seasonal components in case of multiplicative models were incorrectly estimated.
+* iETS could not be used in some cases of highly intermittent data and intermittent!="n".
+* logLik was incorrectly calculated in iss() for cases of intermittent="p".
+* The selection of intermittent model was done incorrectly due to the new return of ICs.
+* Return NULL in logLik() function, when logLik is unavailable for the model (e.g. combination of models). Similar thing with nParam().
+* Check if the data.frame is provided to ves.
+* stepwise() now ignores NAs in the provided data.
+
+
+smooth v2.3.2 (Release data: 2018-01-18)
+==============
+
+Changes:
+* The providedC is now used in case of xregDo="select". This should increase the speed of convergence and fix several bugs related to optimisation problems.
+* The correct initialX are now used in cases of es("ZZZ") and es("CCC").
+* We now return the matrix of ICs and ICweights in cases of model selection and combinations of es().
+* maxeval in the optimiser now depends on the number of parameters. If we have more than 10, then maxeval=1000. Otherwise maxeval=500.
+* Removed a silly SMAPE from the output of accuracies and substituted by a more useful sCE. Both are still available via ourModel$accuracy.
+
+Bugfixes:
+* ges() added an array to a vector, which caused dozens of warnings. Fixed.
+
+
+smooth v2.3.1 (Release data: 2018-01-13)
+==============
+
+Changes:
+* es() now uses branch and bound mechanism for XXX and YYY models.
+* intermittent="l" now allows dealing with seasonal models in imodel.
+* make Accuracy() function available for users.
+* ces(), ges() and ssarima() now produce some forecasts on small samples (e.g. less than 6 observations). This mechanism is not yet smart enough, and will be improved upon.
+
+Bugfixes:
+* es() now also checks if data is multiplicative in case of YYY and acts accordingly.
+* dataStart and yForecastStart variables in the code.
+* stepwise() now has a more userfriendly Call in the output.
+
+
+smooth v2.3.0 (Release data: 2017-12-23)
+==============
+
+Changes:
+* New function, viss() - vector intermittent state-space model. Allows modelling occurrence probability of several variables simultaneously.
+* New initialisation for es(), ges() and ces(). This should help getting more accurate initial states in cases of high frequency data.
+* The user can now control the optimiser via maxeval and xtol_rel provided in ellipsis of es() and ges() functions.
+
+Bugfixes:
+* smooth functions would return errors in case when some xreg variables were dropped and only one would be left.
+* ETSX(Z,Z,Z) did not work when xreg contained negative data. Now it should.
+* Number of parameters in case of xregDo="select" was incorrect.
+
+
+smooth v2.2.2 (Release data: 2017-12-15)
+==============
+
+Changes:
+* Updated vignettes.
+* New probability type for intermittent models - "logistic".
+* In the case when we don't have binary xreg for the holdout, we now consider it as random and forecast it using iss().
+* graphmaker() now only resets par() when legend=TRUE. This allows using layout and producing several plots with the function on one canvas.
+* xregExpander() now uses iss() function in case of binary data.
+* Updated an example in stepwise() function.
+* ves() function now uses warning() instead of message() everywhere.
+* iss() now also accepts and returns initialSeason (works with intermittent="l" only).
+
+Bugfixes:
+* Fixed Likelihood calculation for TSB probability model.
+
+
+smooth v2.2.1 (Release data: 2017-11-15)
+==============
+
+Changes:
+* GES now has a multiplicative form. And auto.ges() allows selecting between additive and multiplicative models.
+* intermittent now has "i" and "p" values instead of "c" and "t" respectively. This aligns with the recently published working paper on the subject.
+* cfType now has a different set of values. RTFM.
+
+Bugfixes:
+* Corrected a bug in auto functions with intermittent data.
+
+
+smooth v2.2.0 (Release data: 2017-10-26)
+==============
+
+Changes:
+* New function - auto.ges(). It's not fast, but it's pretty efficient.
+
+Bugfixes:
+* Number of parameters in ges() was not calculated correctly.
+* ges() could not be initialised in cases of small samples and models with large orders.
+* Fixed a bug in SSARIMA with multiple steps ahead cost functions.
+* es() sometimes returned smoothing parameters values that did not satisfy the usual constrains.
+* New initialisation of smoothing parameters in es() in case of cfType="HAM".
+
+smooth v2.1.2 (Release data: 2017-09-21)
+==============
+
+Changes:
+* Changed the order of parameters in the sim-functions, so that the number of observations and number of simulations follow the very first parameter. This should simplify things.
+* Removed some of the redundant alliases in documentation and model.type() function. Use modelType() instead.
+* Variance in cases of seasonal models and cumulative=TRUE, are now produced using simulations.
+* New function - sim.sma() - generate data from SMA model.
+
+Bugfixes:
+* Check of initials when model is not selected in es().
+* sim.ssarima() did not take correctly into account the provided initials.
+
+smooth v2.1.1 (Release data: 2017-09-04)
+==============
+
+Changes:
+* initials for parameters of AR now take into account the number of parameters. Should simplify optimisation of AR.
+* Number of parameters in univariate models now consists of the part "estimated" and "provided". Each model now returns a table as nParam with a detailed info about what was estimated/provided. If something was provided, then it is no longer taken into account in calculation of statistics (i.e. AIC, sigma etc).
+* Similar thing is now implemented for ves().
+* ves() now can produce "independent" prediction intervals (when covariances for time series are ignored).
+* Yet another change in the number of parameters to estimate in es(), ges() and ces(), taking that some values could be provided, while the others - left for optimisation.
+* sma() now restricts the maximum order in case of order selection to 200. This corresponds to the case with global level for different time series and should be sufficient in 99.9% of cases.
+
+Bugfixes:
+* auto.ssarima() had a bug with dataMA.
+* auto.ssarima() did not calculate correctly number of iterations for AR models.
+* Several minor bugfixes in ges() and ssarima() functions (bugs with provided values).
+* Because of R's unique feature of working with names of variables, the situation when CUpper is provided, but C is not, was not handled well.
+* Check of maximum number of parameters to estimate did not take into account some of the provided values.
+* sma() wasn't checking what is provided as order. Now it does.
+* auto.ssarima() did not estimated percentage of estimated models correctly in cases of constant!=NULL.
+* Cumulative variance was calculated incorrectly. Now the non-seasonal case is fixed. SEASONAL MODELS STILL HAVE THIS PROBLEM!
+* Found bug in variance calculation for some seasonal models, which caused intervals for SSARIMA, GES and CES to be narrower than needed.
+
+smooth v2.1.0 (Release data: 2017-08-01)
+==============
+
+Changes:
+* Occurrence part of TSB model now accepts ETS models. So you can have trends / seasonality in probability.
+* Both Croston and TSB in iss() can now also accept exogenous variables.
+* es() now accepts model estimated using ets() function from forecast package.
+* Probability in TSB is now restricted with [0, 1] region.
+* We can now fit es() even on 3 observations, but with persistence forced to be equal to zero. Don't expect a good model, though...
+* auto.ssarima() now allows defining whether constant is needed or not. By default it will check this automatically.
+* Initials of xreg before the optimisation are now based on OLS estimates.
+* In case of updateX=TRUE, we now check a very basic forecastability condition.
+* A couple of new examples in vignettes.
+
+Bugfixes:
+* Parameteric prediction intervals for cases of h=1 did not work for some models.
+* Fixed model selection on non-positive data, when model="YYY", intermittent!="n", but we don't have enough non-zero observations.
+* Models with boundary probabilities returned -Inf as likelihood value, which is incorrect.
+* xregDo now works with only one variable as well.
+* intermittent="a" did not work with auto.ssarima() and auto.ces() functions.
+* initials of xreg did not work correctly when Etype="A".
+* Now we force the provided xreg to become a matrix.
+* xreg did not work well with zoo, when xreg contained NAs. Now it should work.
+* auto.ssarima() did not allow selecting the best model between AR models only. Now it does.
+* Fixed xreg selection in cases of xreg having special characters in names.
+* Centering of errors in sim.es() is now done automatically only for runif.
+* Number of parameters returned by models was not correct, missing exogenous variables and intermittent model.
+
+
+smooth v2.0.1 (Release data: 2017-07-05)
+==============
+
+Changes:
+* Forecasts and prediction intervals of the rounded values are now produced analytically.
+* PLS now needs vector of variances, which is produced only when intervals==TRUE. In all the other cases its value can be incorrect.
+* New initials for the exogenous variables in case of multiplicative models + stricter check of correlations between the regressors.
+* We also now check multiple correlations for exogenous variables.
+* silent="all" is now the default value.
+
+Bugfixes:
+* Provided imodel sometimes would not be used correctly in the initialisation.
+* Rounded values were not returned in cases when intervals=FALSE.
+* PLS could not be calculated for some cases, when ts object was used.
+
+
+smooth v2.0.0 (Release data: 2017-07-01)
+==============
+
+Changes:
+* New function - ves(). Currently the basic features of all the pure additive and pure multiplicative models are implemented. No prediction intervals, no intermittence, no automatic model selection.
+* New parameter - imodel, which determines the type of model for probability in case of iSS models. Can also accept models previously estimated using iss() function.
+* Point forecasts in case of simulated data are now based on the simulation rather than analytical expression.
+* Max order of SMA is now equal to obsInSample.
+* Introduced a hidden parameter, rounded, which determines whether the rounded up value of demand sizes is assumed in the model. This influences the cost function and leads to a different results in case of intermittent model.
+* If cumulative==TRUE, then we now return cumulative holdout values as well.
+* New method pointLik() for smooth class. It returns the vector of log-likelihoods for each separate observation.
+* Better integration of sim.es() objects and es() function. Now you can do something like this to fit the "true" model: x <- sim.es("MNN"); es(x$data,model=x).
+* es() now also returns transition matrix.
+* Optimised C++ code, which should result in the growth of computational speed for ~25%.
+* es() now returns PLS value in the accuracy for all the types of models.
+
+Bugfixes:
+* simulator function in Rcpp did not cover the cases, when level could become negative. This is now fixed.
+* ssarima() now checks if the number of observations is enough for the model and stops if it is not.
+* es() didn't work in some cases of seasonal models, when number of in-sample observations was less than twice frequency of data. The seasonal model should not be used there in the first place.
+* getResponse() function now returns the in-sample actuals.
+* exists() functions in the code would look into the parent environments. Now they don't.
+* sim.ssarima() returned state vector with wrong names in case of constant.
+* When coef() was applied to es() objects, the initialSeason parameters were not returned because of the old name of the variable.
+* Corrected a problem with initials of iETSX models.
+
+
+smooth v1.9.9 (Release data: 2017-05-03)
+==============
+
+Changes:
+* New parameter - cumulative - which makes functions return aggregated over the forecast horizon values (point and interval forecasts).
+* graphmaker() now treats cumulative forecasts.
+* Error measures take the possible cumulative nature of forecasts into account.
+* auto() functions now also accept smooth.sim objects as data.
+* polyroot() was working badly for multiple seasonal ARIMAs, so I had to ditch it in favour for my Rcpp function. SSARIMA now works even slower. Will need to optimise it somehow.
+* Updated vignettes, showing how multiple seasonal ARIMA can be estimated.
+* Renamed MLSTFE into GMSTFE - Geometric Mean Squared Trace Forecast Error. This is slightly easier to remember.
+* Trace Forecast Likelihood is once again available as estimator.
+* Started work on a new function - ves() - Vector Exponential Smoothing. It will be released in 2.0.0.
+
+Bugfixes:
+* datafreq is now used in all the functions.
+
+
+smooth v1.9.1 (Release data: 2017-03-28)
+==============
+
+Changes:
+* New function in error measures category - pls() - Prediction Likelihood Score.
+* PLS is now included in accuracy measures of es().
+
+Bugfixes:
+* Fixed a problem with phi estimation in cases, when initial values for the optimiser are provided.
+* Now we don't check C / CLower / CUpper if they are not provided.
+* Fixed a problem with prediction intervals construction for binary variables.
+
+
+smooth v1.9.0 (Release data: 2017-03-18)
+==============
+
+Changes:
+* New function - sim.ges() - simulate data using GES model.
+
+Bugfixes:
+* Fixed bug with cfType="MSTFE" in case of multiplicative errors.
+
+
+smooth v1.8.0 (Release data: 2017-03-12)
+==============
+
+Changes:
+* New function - xregExpander(), which creates matrix of xreg with lagged values based on provided data and automatically fills in NAs with forecasted values using es().
+* "optimal" is now the default initialisation method for ces().
+* Created templates for roxygen2 for the consistency purposes of the documentation.
+* plot() methods for classes smooth and smooth.sim now accept main and ylab parameters. Do whatever you want!
+
+Bugfixes:
+* In cases of df<=0 we now produce a warning and prediction intervals based on Chebyshev's inequality.
+* es() now does not complain about failing to estimate something when persistence is predefined.
+* Fixed a bug, when predicting binary variables using any iSS model, we would end up with errors. Now in this case we just select among the intermittent models, ignoring non-intermittent one.
+
+
+smooth v1.7.1 (Release date: 2017-03-01)
+==============
+
+Changes:
+
+* Mixed ETS models now produce negative forecasts. But it does not make much sense to my taste...
+* The initial values of smoothing parameters before the optimisation are now set to 0.3, 0.2, 0.1 for both additive and multiplicative models.
+* Some plot() methods for smooth now accept additional parameters.
+* es() now also accepts hidden parameters C, CLower and CUpper for initialisation of optimiser and setting bounds in which to search for the optimal value.
+* es(), ces(), ssarima() and ges() now accept smooth.sim objects and can automatically extract data from them. This is just for comfort...
+
+
+smooth v1.7.0 (Release date: 2017-02-24)
+==============
+
+Changes:
+
+* The package now uses roxygen2. It's a bit messy at the moment, but will be sorted out soon.
+* We now import a couple of functions from forecast package (forecast and getResponse). This helps us make better connection between methods in packages.
+* forecast() function for smooth now returns $method as a name of applied model and $model as a fitted R model (corresponds to what forecast does in forecast package).
+
+Bugfixes:
+
+* If data passed to functions was a matrix, then functions wouldn't work. Now they say about that out loud.
+* Fixed a bug with mixed models with multiplicative errors. They produce sometimes senseless forecasts, but at least they produce them.
+* Added some stuff to src folder (registerDynamicSymbol.c) in order to make CRAN checks shut up about some irrelevant things (R_useDynamicSymbols? R_registerRoutines? WTF?!).
+
+
+smooth v1.6.4 (Release date: 2017-02-20)
+==============
+
+Changes:
+
+* Added orders and lags method for the class Arima. This should allow easily extracting these values from models fitted using arima(), Arima() and auto.arima() functions from stats and forecast packages.
+* modelType() is now renamed into model.type().
+* If xreg contains NAs, we now substitute them with zeroes.
+
+Bugfixes:
+
+* Fixed a bug with initial value in backcasting, that was causing annoying problems in ssarima.
+* Fixed a bug in sma() function and model provided to it.
+* Fixed names of xreg in cases when we need to drop some of the variables.
+* In some cases the second optimiser behaved badly and returned worsened value. Fixed it.
+* Fixed a bug with phiEstimate becoming equal to TRUE, when phi is not needed at all.
+
+
+smooth v1.6.3 (Release date: 2017-02-14)
+==============
+
+Changes:
+
+* Fixed a problem with ETS(M,Z,Z) and xreg.
+* Function now removes xreg which is equal to the value we need to forecast (if there is one).
+* We also now return formula in es(), which is accesible via formula() function. This should help when you have problems in understanding what model has been constructed.
+
+Bugfixes:
+
+* Corrected description of accuracy measures in es(), ces(), ges() and ssarima().
+* Fixed some bugs relating combination of models with xregDo="s".
+
+
+smooth v1.6.2 (Release date: 2017-02-01)
+==============
+
+Changes:
+
+* Addressed issue #58. Now matrix is first transposed and then model is fitted to data. This led to a tiny increase in speed.
+* Prediction intervals for intermittent models are now rounded up.
+
+Bugfixes:
+
+* Non-parametric and semi-parametric intervals were broken since 1.6.0
+* es() with backcasting and predefined persistence was complaining on estimation problems without any reason.
+* Corrected initial quantiles for prediction intervals and optimisation mechanism (for correct prediction intervals for intermittent data).
+
+
+smooth v1.6.1 (Release date: 2017-01-27)
+==============
+
+Bugfixes:
+
+* Corrected a bug with nExovars in es()
+
+
+smooth v1.6.0 (Release date: 2017-01-27)
+==============
+
+Changes:
+
+* ssarima(), ges() and ces() now have xreg selection mechanism.
+* auto.ssarima() and auto.ces() now also have that stuff.
+* Finally es() does that as well.
+* iSS models now return relevant error measures.
+* es() now allows combining a pool of models, when the list includes "CCC".
+* logLik() now also includes nobs as an attribute.
+* We now report modelX if it includes xreg. For example, "ARIMAX" instead of ARIMA.
+* Renamed some internal variables for consistency purpose.
+* Redone prediction intervals for iSS models.
+
+Bugfixes:
+
+* Renamed some internal parameters for consistency purposes.
+* Found a bug with nParam calculation in ges().
+* Fixed a bug that did not allow to use combinations with intermittent demand in es().
+* Fixed a bug in backcasting mechanism.
+* Fixed a bug with incorrect df calculation for prediction intervals in combinations.
+
+
+smooth v1.5.2 (Release date: 2016-12-18)
+==============
+
+Changes:
+
+* Instead of having dozens of methods based on AIC and BIC, we now have logLik, nobs and AICc.default. The latter should also work with other, non smooth, classes (e.g. "ets","lm").
+* sim functions now return likelihood via logLik value rather than "likelihood". This allows using logLik, AIC and other functions.
+* iss function now also does the same...
+* Introduced "SBA" as a separate method for intermittent demand.
+
+Bugfixes:
+
+* Parametric prediction intervals for iSS models always had width of 95%. This is now fixed.
+* Corrected bug in Croston's iSS, where the last observation of data was included as non-zero demand.
+* Fixed a bug when MNN was fit to intermittent data without intermittency.
+
+
+smooth v1.5.1 (Release date: 2016-11-30)
+==============
+
+Changes:
+
+* Now you can produce 0-steps ahead forecasts using smooth functions. Pretty cool, ah? And pretty useless for my taste. But here it is!
+* iprob in sim functions now also accepts a vector, implying that probability may vary over time in style of TSB and Croston's method.
+
+Bugfixes:
+
+* intermittent data was not taken correctly into account in number of parameters calculation in functions.
+* Fixed a bug with persistence not accepting matrices in es()
+* persistence now looks nice in the output of sim.es()
+* sim.ssarima() had a bug with array not becoming a matrix. Nailed it!
+
+
+smooth v1.5.0 (Release date: 2016-11-13)
+==============
+
+Changes:
+
+* auto.ssarima() now allows combining forecasts using IC weights. This is a first try. Prediction intervals for the combined model are currently incorrect.
+* Made important changes to initialisation of SARIMA and some tuning in backcasting mechanism.
+* Some tuning in sim functions in parts with ellipsis checks.
+* sim.ssarima() now accepts orders as list. This should be handy when doing sim.ssarima(orders=orders(ourModel)). No need to define each order separately anymore.
+* ssarima() also accepts orders as list. No need to specify separate ar.orders, ma.orders and i.orders (they are now optional) if you want to extract value from another model. Plus it is handy just to write orders=list(ar=1,i=1,ma=c(1,2,3)).
+* auto.ssarima() now also uses orders as a list variable instead of ar.max, i.max and ma.max.
+* sim.ssarima() now uses burn-in period if the initials were generated.
+* Uodated manuals, so they are a bit more consistent.
+* Got rid of silent parameter in sim functionst, because all the info they give needs to be put in warnings.
+* sim functions now print proper warnings.
+* Tuned initial values of es(). This should be helpfull in cases with backcasting of initials.
+* Optimised auto.ssarima() mechanism. Not faster, but more accurate.
+
+Bugfixes:
+
+* sim.ssarima() wouldn't work in cases of ARIMA(0,0,0) with/without constant.
+* polynomials were multiplied inccorectly in cases of ARIMAs with d>1.
+* Fixed a bug with phiEstimate not beeing used correctly.
+
+
+smooth v1.4.7 (Release date: 2016-11-01)
+==============
+
+Changes:
+
+* New function - sim.ces(), that generates data from CES model with predefined parameters.
+* Due to (1) simulate.smooth() now also works with CES.
+* modelType() in cases of ces() now returns the full name of model instead of the first letter.
+* auto.ces() has now a smaller pool of models: "none", "simple" and "full".
+
+Bugfixes:
+
+* Fixed problem with xreg length and provided initialX (issue #59 on github).
+* Fixed a check of models pool in auto.ces().
+
+
+smooth v1.4.6 (Release date: 2016-10-23)
+==============
+
+Changes:
+
+* New function - sim.ssarima() that allows generating data from any ARIMA with any provided parameters.
+* New methods for smooth class: lags, orders and modelType. First two are for ssarima(), ges() and sma(), the last one is for es(), ces() and ets() from "forecast" package.
+* Introduced new class for simulation functions, "smooth.sim" and created print and plot methods for them.
+* es() now accepts "XXX" as model. This allows excluding multiplicative components from the pool. This does not use branch and bound. So model="ZXZ" will go through all the models with T="N", T="A" and T="Ad".
+* Similarly es() can now select the most appropriate non-additive model. This is regulated with: model="YYY".
+
+Minor changes:
+
+* Updated print for "smooth" class for es() and ges(): now we produce a nice vector with names of smoothing parameters.
+* simulate.smooth() method update in order to take sim.ssarima() into account.
+* AICc now also extracts AICc from ets() of "forecast" package.
+
+Bugfixes:
+
+* Fixed a bug with provided model with damped trend.
+* Fixed a bug in pool of models with damped trend ("ZAdZ").
+
+
+smooth v1.4.5 (Release date: 2016-10-16)
+==============
+
+Changes:
+
+* Parameter intervals now accepts type of interval instead of intervalsType.
+* Polynomials of ssarima() are now multiplied in C++. Initialisation is now done there as well. This slightly speeds up the estimation and construction of SSARIMA.
+
+Bugfixes:
+
+* Fixed names of returned smoothing parameters by es().
+
+
+smooth v1.4.4 (Release date: 2016-09-20)
+==============
+
+Changes:
+
+* auto.ssarima() function uses now a different algorithm. This allows speeding up order selection process and selecting models closer to the "true" one.
+* Some corrections in smooth-Documentation.
+* Package will now tell its version when loaded.
+
+Bugfixes:
+
+* Corrected C++ bug that caused problems on Solar OS.
+
+
+smooth v1.4.3 (Release date: 2016-09-16)
+==============
+
+Changes:
+
+* Removed "TFL" as a cost function type and "asymmetric" as intervals type. The functions still accept these parameters, but the parameters are now hidden, because currently they are not ready for wide audience.
+* Changed how number of parameters is calculated when initials are provided. They should be counted in. Only backcasting now excludes initials in calculation of number of parameters.
+* Prepared vignette for es(), ces(), ssarima(), ges(), sma() and sim.es(). This now includes examples with some comments.
+* Uploaded documentation for the package to github (https://github.com/config-i1/smooth/smooth.pdf). This will be published as working paper and will be available via ResearchGate.
+
+Bugfixes:
+
+* Fixed a bug with intervalsType="s" not working for auto functions.
+* data provided to auto functions is now checked.
+
+
+smooth v1.4.2 (Release date: 2016-09-15)
+==============
+
+Changes:
+
+* We now use vignettes, explaining how to work with functions and what they return. This is just a start of the work. Vignettes will be updated. There is also a work on documentation for models underlying smooth package. This is currently reviewed and will be available as a working paper soon.
+* New function - sma() - Simple Moving Average. It fits one as a state-space model. So, apparantely there is a model underlying simple moving average method...
+* Named transitionX and persistenceX are now returned, when using exogenous variables are used with updateX=TRUE. This should simplify the analysis of these matrices.
+
+Bugfixes:
+
+* A fix for plot(es(...)) in case of inclusion of exogenous variables leading to states containing more than 10 columns.
+* Warnings are now always printed out for unstable SSARIMA.
+
+
+smooth v1.4.1 (Release date: 2016-09-09)
+==============
+
+Changes:
+
+* We now suggest testthat package and do more extensive tests in order to make sure that everything works as it should.
+* Introduced parameters A and B in ces() function.
+* Got rid of parameter C in ces() function.
+
+Bugfixes:
+
+* ssarima() could not construct ARIMA(0,1,0) without constant. Fixed that.
+
+
+smooth v1.4.0 (Release date: 2016-09-08)
+==============
+
+Changes:
+
+* Started this NEWS file.
+* Fixed a bug with ssarima() not accepting previously estimated models in cases with constant=TRUE.
+* Removed NUS and sim.ces. They will return when they are in a better condition.

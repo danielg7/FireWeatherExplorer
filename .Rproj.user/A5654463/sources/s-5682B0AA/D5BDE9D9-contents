@@ -1,0 +1,33 @@
+writeWeatherData <- function(WeatherData = data.frame(), stationMetadata = data.frame(), file = file()){
+  if(is.null(WeatherData))
+    stop("WeatherData cannot be empty!")
+  if(is.null(stationMetadata))
+    stop("stationMetadata cannot be empety!")
+  
+
+meta_StationName <- paste("# Station Name: ", stationMetadata$STATION$NAME, " (",stationMetadata$STATION$STID,")", sep = "")
+meta_type <- paste("# Station Type:", stationMetadata$STATION$SHORTNAME)
+meta_GACC <- paste("# GACC:", stationMetadata$STATION$GACC)
+meta_FireWxZone <- paste("# NWS Fire Weather Zone:", stationMetadata$STATION$NWSFIREZONE)
+meta_Range <- paste("# Period of Record: ",
+                    min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
+                    " - ",
+                    max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
+                    sep = "")
+
+header <- paste(meta_StationName, meta_type, meta_GACC, meta_FireWxZone, meta_Range, sep = "\r\n")
+
+fileToWrite <- file(file, open = 'w')
+writeLines(text = header, con = fileToWrite)
+close(fileToWrite)
+
+
+write.table(x = WeatherData,
+            file = file,
+            append = TRUE,
+            row.names = FALSE,
+            sep = ',',
+            quote = FALSE)
+}
+
+writeWeatherData(WeatherData = wx_df,stationMetadata = stationMetadata, file = "test.csv")

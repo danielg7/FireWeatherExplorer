@@ -1,0 +1,24 @@
+Package: debugme
+Title: Debug R Packages
+Version: 1.1.0.9000
+Author: Gábor Csárdi
+Maintainer: Gábor Csárdi <csardi.gabor@gmail.com>
+Description: Specify debug messages as special string constants, and
+    control debugging of packages via environment variables.
+License: MIT + file LICENSE
+LazyData: true
+URL: https://github.com/r-lib/debugme#readme
+BugReports: https://github.com/r-lib/debugme/issues
+RoxygenNote: 6.0.1
+Roxygen: list(markdown = TRUE)
+Imports: crayon, grDevices
+Suggests: covr, mockery, R6, testthat, withr
+Encoding: UTF-8
+GithubRepo: debugme
+GithubUsername: gaborcsardi
+GithubRef: master
+GithubSHA1: f4a116a6bfc338592e6dfd7fcc2b027da87c7ab5
+Built: R 3.4.2; ; 2018-03-10 03:04:31 UTC; unix
+InstallAgent: packrat 0.4.8.1
+InstallSource: github
+Hash: 30f9e37b309f9500307e5b98cb1e678e

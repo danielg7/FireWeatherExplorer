@@ -1,0 +1,34 @@
+AICc                    Corrected Akaike's Information Criterion
+Accuracy                Accuracy of forecasts
+MPE                     Error measures
+auto.ces                Complex Exponential Smoothing Auto
+auto.ges                Automatic GES
+auto.ssarima            State-Space ARIMA
+ces                     Complex Exponential Smoothing
+es                      Exponential Smoothing in SSOE state-space model
+forecast.smooth         Forecasting time series using smooth functions
+ges                     General Exponential Smoothing
+graphmaker              Linear graph construction function
+hm                      Half moment of a distribution and its
+                        derivatives.
+iss                     Intermittent State Space
+nParam                  Number of parameters in the model
+orders                  Functions that extract values from the fitted
+                        model
+pls                     Prediction Likelihood Score
+pointLik                Point likelihood values
+sim.ces                 Simulate Complex Exponential Smoothing
+sim.es                  Simulate Exponential Smoothing
+sim.ges                 Simulate Generalised Exponential Smoothing
+sim.sma                 Simulate Simple Moving Average
+sim.ssarima             Simulate SSARIMA
+sma                     Simple Moving Average
+smooth                  Smooth package
+sowhat                  Function returns the ultimate answer to any
+                        question
+ssarima                 State-Space ARIMA
+stepwise                Stepwise selection of regressors
+ves                     Vector Exponential Smoothing in SSOE
+                        state-space model
+viss                    Vector Intermittent State Space
+xregExpander            Exogenous variables expander

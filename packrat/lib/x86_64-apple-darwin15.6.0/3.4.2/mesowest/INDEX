@@ -1,0 +1,5 @@
+getparams               Retrieve List of API parameters
+mw                      Retrieve Data from mesowest
+mwtoken                 Get cached mesowest token
+mwvariables             Retrieve List of Station Variables
+requestToken            Request an authentication token from mesowest

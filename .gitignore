@@ -1,7 +1,3 @@
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
-README.html
-packrat/lib*/
-Report.docx
+api_key.txt
+test.txt
+combinedWx.Rda

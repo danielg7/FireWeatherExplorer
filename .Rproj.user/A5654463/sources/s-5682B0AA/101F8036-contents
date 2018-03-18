@@ -1,0 +1,43 @@
+wx_df_test <- wx_df
+wx_df_test$Day <- lubridate::day(wx_df_test$DateTime)
+
+test <- wx_df_test %>%
+  group_by(Year) %>%
+  filter(Day == min(Day) & Hour == min(Hour) & Month == min(Month)) %>%
+  mutate(FirstDay = TRUE) %>%
+  ungroup()
+
+test <- wx_df_test %>%
+  group_by(Year) %>%
+  arrange(DateTime) %>%
+  mutate(HourlyRainfall = PrecipAccumulation - lag(PrecipAccumulation, default=first(PrecipAccumulation))) %>%
+  group_by(Year, Month, Day) %>%
+  mutate(DailyRainfall = sum(HourlyRainfall, na.rm = TRUE)) %>%
+  ungroup()
+
+precipPlot <- ggplot(data = test,
+                     aes(x = DayOfYear,
+                         y = DailyRainfall))+
+  geom_point(alpha = 0.25, size = 0.25)+
+  scale_x_date("Day of the Year", labels = function(x){format(x, "%b")})+
+  scale_y_continuous("Hourly Precipitation (hr)", limits = c(0, round(max(test$DailyRainfall + 1))))+
+  #labs(title = "Precipitation",
+   #    subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+  facet_grid(facets = Year ~ .)+
+  theme_bw(base_size=15,
+           base_family="Avenir")
+precipPlot
+
+
+
+SD <- "201101012300"
+ED <- "201701012300"
+
+k <- mesowest::mw(service = 'precipitation',
+                stid = "RSOC2",
+                start = SD,
+                end = ED,
+                units="ENGLISH")
+
+k$STATION$OBSERVATIONS$total_precip_value_1
+

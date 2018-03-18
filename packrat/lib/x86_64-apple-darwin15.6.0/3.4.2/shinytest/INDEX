@@ -1,0 +1,16 @@
+ShinyDriver             Class to manage a shiny app and a phantom.js
+                        headless browser
+Widget                  Class for a Shiny widget
+diffviewer_widget       Creat an htmlwidget that shows differences
+                        between files or directories
+expectUpdate            'testthat' expectation for a Shiny update
+expect_pass             Expectation: shinytest object passed snapshot
+                        tests
+recordTest              Launch test event recorder for a Shiny app
+shinytest               Test Shiny Apps
+snapshotCompare         Compare current and expected snapshots
+testApp                 Run tests for a Shiny application
+textTestDiff            Get textual diff of test results
+viewTestDiff            View differences in test results
+viewTestDiffWidget      Interactive viewer widget for changes in test
+                        results
