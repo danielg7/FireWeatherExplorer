@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1521339150734.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3609301802",
+    "id" : "5DC1E090",
+    "lastKnownWriteTime" : 1520645863,
+    "last_content_update" : 1520645863,
+    "path" : "~/Dropbox/Fire Management/FireWeatherExplorer/global.R",
+    "project_path" : "global.R",
+    "properties" : {
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
