@@ -2,4 +2,5 @@ api_key.txt
 test.txt
 combinedWx.Rda
 packrat/lib*/
-.Rproj.user
+.Rproj.user*
+packrat/src/
