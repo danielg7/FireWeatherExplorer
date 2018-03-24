@@ -34,6 +34,9 @@ readInWeather <- function(StationID, County, Start, End)
   if(Start > End)
     stop("Start year must be less than end year.")
   
+  if(!StationID %in% AllRAWS$STATION$STID)
+    stop("StationID not in list!")
+  
   #
   # Formatting start and end date strings per what the Mesowest API requires.
   #

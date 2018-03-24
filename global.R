@@ -1,7 +1,7 @@
 library("curl")
 
 
-source("./RawsDL.R")
+source("RawsDL.R")
 
 # Read in Stations --------------------------------------------------------
 
