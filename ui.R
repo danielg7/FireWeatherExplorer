@@ -206,7 +206,7 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                    # FM1 Slides
                                    
                                    sliderInput(inputId = "FMC1",
-                                               label = "1 Hr Fuel Moisture (%):",
+                                               label = "1 Hr Fuel Moisture (%) *Currently unreliable* :",
                                                min = 0,
                                                max = 30,
                                                value = c(4,12)),
@@ -214,7 +214,7 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                    # FM10 Slides
                                    
                                    sliderInput(inputId = "FMC10",
-                                               label = "10 Hr Fuel Moisture (%)",
+                                               label = "10 Hr Fuel Moisture (%) *Currently unreliable*",
                                                min = 0,
                                                max = 60,
                                                value = c(5,12))

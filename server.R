@@ -28,12 +28,28 @@ server <- function(input, output, session) {
       #
       
       County_List <- sort(as.character(unique(AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$STATE == input$State)])))
-      
+
       selectInput(inputId = "County",
                   label = "Select County",
                   choices = County_List,
-                  selected = "Larimer")
+                  selected = County_List[1])
+      
       })
+    output$station <- renderUI({
+      
+      #
+      # Once the 'state' input changes, add stations to the list by pulling them from the station list relative to the first county
+      #
+      County_List <- sort(as.character(unique(AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$STATE == input$State)])))
+      
+      
+      Station_List <- unique(AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == County_List[1])])
+      
+      selectInput(label = "Select Stations",
+                  inputId = "station",
+                  choices = Station_List,
+                  selected = Station_List[1])
+    })
   })
   
 
@@ -48,11 +64,11 @@ server <- function(input, output, session) {
       #
       
       Station_List <- unique(AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == input$County)])
-      
+
       selectInput(label = "Select Stations",
                   inputId = "station",
                   choices = Station_List,
-                  selected = "REDFEATHER")
+                  selected = Station_List[1])
     })
   })
   
