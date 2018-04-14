@@ -173,7 +173,7 @@ server <- function(input, output, session) {
         
         precipPlot <- ggplot(data = wx_df,
                            aes(x = DayOfYear,
-                               y = HourlyRainfall))+
+                               y = as.numeric(HourlyRainfall)))+
           geom_point(alpha = 0.25, size = 0.25)+
           scale_x_date("Day of the Year", labels = function(x){format(x, "%b")})+
           scale_y_continuous("Hourly Precipitation (hr)")+
@@ -412,7 +412,9 @@ server <- function(input, output, session) {
             labs(title = "Temperature Records by Hour",
                  subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
             theme_bw(base_size=15,
-                     base_family="Avenir")
+                     base_family="Avenir")+
+            theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+          
           hour_temp_plot
         })
         
@@ -468,7 +470,9 @@ server <- function(input, output, session) {
             labs(title = "Wind Speed Records by Hour",
                  subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
             theme_bw(base_size=15,
-                     base_family="Avenir")
+                     base_family="Avenir")+
+            theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+          
           hour_wind_plot
         })
       
@@ -703,7 +707,7 @@ server <- function(input, output, session) {
                           " - ",
                           max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
                           sep = "")
-      meta_LatLong <- paste("Lat / Long :",as.character(stationMetadata$STATION$LATITUDE),", ",as.character(stationMetadata$STATION$LONGITUDE),
+      meta_LatLong <- paste("Lat / Long: ",as.character(stationMetadata$STATION$LATITUDE),", ",as.character(stationMetadata$STATION$LONGITUDE),
                             sep = "")
       HTML(paste('<br/>',meta_type, meta_Range, meta_LatLong, meta_GACC, meta_FireWxZone, sep = '<br/>'))
     })

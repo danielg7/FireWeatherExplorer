@@ -138,6 +138,15 @@ fxn_weatherCleaner <- function(weatherDB){
     stop("No data in this station for this period of record!")
   }
   
+  if(!"precip_accum_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
+    warning("No rainfall in station data. Giving NAs.")
+    rainfall <- rep(NA, length(weatherDB$STATION$OBSERVATIONS$date_time[[1]]))
+  }
+  
+  if("precip_accum_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
+    rainfall <- weatherDB$STATION$OBSERVATIONS$precip_accum_set_1[[1]]
+  }
+  
   print("Passed.", quote = FALSE)
   
   # Populate dataframe
@@ -150,7 +159,7 @@ fxn_weatherCleaner <- function(weatherDB){
                           "Temp" = weatherDB$STATION$OBSERVATIONS$air_temp_set_1,
                           "RH" = weatherDB$STATION$OBSERVATIONS$relative_humidity_set_1,
                           "SolarRad" = weatherDB$STATION$OBSERVATIONS$solar_radiation_set_1[[1]],
-                          "PrecipAccumulation" = weatherDB$STATION$OBSERVATIONS$precip_accum_set_1[[1]])
+                          "PrecipAccumulation" = rainfall)
     names(newWxDF) <- c("DateTime","FuelMoisture_10hr","Wind_Direction","Wind_Speed","Temp","RH","SolarRad","PrecipAccumulation")
   }
   
@@ -166,13 +175,13 @@ fxn_weatherCleaner <- function(weatherDB){
                           "Temp" = weatherDB$STATION$OBSERVATIONS$air_temp_set_1,
                           "RH" = weatherDB$STATION$OBSERVATIONS$relative_humidity_set_1,
                           "SolarRad" = weatherDB$STATION$OBSERVATIONS$solar_radiation_set_1[[1]],
-                          "PrecipAccumulation" = weatherDB$STATION$OBSERVATIONS$precip_accum_set_1[[1]])
+                          "PrecipAccumulation" = rainfall)
     names(newWxDF) <- c("DateTime","FuelMoisture_10hr","Wind_Direction","Wind_Speed","Temp","RH","SolarRad","PrecipAccumulation")
   }
   
   if(!"fuel_moisture_set_1" %in% names(weatherDB$STATION$OBSERVATIONS) & !"solar_radiation_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
     
-    print("No fuel moisture in this dataset!", quote = FALSE)
+    print("No fuel moisture in this dataset!")
     FMCMissing <<- TRUE
     
     newWxDF <- data.frame("Date_Time" = weatherDB$STATION$OBSERVATIONS$date_time[[1]],
@@ -182,7 +191,7 @@ fxn_weatherCleaner <- function(weatherDB){
                           "Temp" = weatherDB$STATION$OBSERVATIONS$air_temp_set_1,
                           "RH" = weatherDB$STATION$OBSERVATIONS$relative_humidity_set_1,
                           "SolarRad" = NA,
-                          "HourlyRainfall" = weatherDB$STATION$OBSERVATIONS$precip_accum_one_hour_set_1[[1]])
+                          "HourlyRainfall" = rainfall)
     names(newWxDF) <- c("DateTime","FuelMoisture_10hr","Wind_Direction","Wind_Speed","Temp","RH","SolarRad","HourlyRainfall")
   }
   
