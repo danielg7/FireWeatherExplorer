@@ -2,8 +2,11 @@
 SD <- "201101012300"
 ED <- "201701012300"
 goodWx <- readInWeather(StationID = "RSOC2",
-                        Start = SD,
-                        End = ED)
+                        County = "Larimer",
+                        Start = 2011,
+                        End = 2017)
+
+goodWxOut <- fxn_weatherCleaner(goodWx)
 
 
 badWx <- readInWeather(StationID = "TS582",

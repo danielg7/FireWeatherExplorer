@@ -42,8 +42,13 @@ server <- function(input, output, session) {
       #
       County_List <- sort(as.character(unique(AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$STATE == input$State)])))
       
+      Station_ID <- AllRAWS$STATION$STID[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == County_List[1])]
+      Station_Names <- AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == County_List[1])]
+      Station_Types <- AllRAWS$STATION$SHORTNAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == County_List[1])]
+      Station_NewNames <- paste(Station_Names,Station_Types,sep = " ")
+      Station_List <- setNames(Station_ID,Station_NewNames)
       
-      Station_List <- unique(AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == County_List[1])])
+      print(Station_List)
       
       selectInput(label = "Select Stations",
                   inputId = "station",
@@ -63,8 +68,13 @@ server <- function(input, output, session) {
       # Once the 'County' input changes, add stations to the list by pulling them from the station list
       #
       
-      Station_List <- unique(AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == input$County)])
-
+      #Station_List <- unique(AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == input$County)])
+      Station_ID <- AllRAWS$STATION$STID[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == input$County)]
+      Station_Names <- AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == input$County)]
+      Station_Types <- AllRAWS$STATION$SHORTNAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == input$County)]
+      Station_NewNames <- paste(Station_Names,Station_Types,sep = " ")
+      Station_List <- setNames(Station_ID,Station_NewNames)
+      
       selectInput(label = "Select Stations",
                   inputId = "station",
                   choices = Station_List,
@@ -568,6 +578,13 @@ server <- function(input, output, session) {
        filter(Conditions %in% "In Prescription") %>%
        group_by(Month, Hour) %>%
        summarise(Count = n())
+    
+      if(is.finite(max(countRange$Count,na.rm = TRUE)))
+         maxRange <- max(countRange$Count,na.rm = TRUE)
+     else{
+       maxRange <- 2
+     }
+         
 
       rh_sub_Plot <- ggplot(data = filter(combinedWx, Conditions %in% "In Prescription"), aes(x = Month, y = Hour))+
         annotate("rect",
@@ -582,7 +599,7 @@ server <- function(input, output, session) {
         geom_count(fill = "red", alpha = .5, pch=21)+
         scale_size_area(name = "Number of Hours In Prescription\nAcross Period of Record",
                         max_size = 10,
-                        breaks = seq(1,max(countRange$Count,na.rm = TRUE),1))+
+                        breaks = seq(1,maxRange,1))+
         scale_x_continuous("Months",breaks = seq(1,12,1),
                            labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
                            limits = c(0.5,12.5))+
@@ -645,7 +662,9 @@ server <- function(input, output, session) {
 
     # Fetch metadata
     
-    StationID <<- AllRAWS$STATION$STID[which(AllRAWS$STATION$NAME == input$station & AllRAWS$STATION$COUNTY == input$County)]
+    print(input$station)
+    
+    StationID <<- AllRAWS$STATION$STID[which(AllRAWS$STATION$STID == input$station & AllRAWS$STATION$COUNTY == input$County)]
 
     
     stationMetadata <<- wxStationMetadata(StationID = StationID)
