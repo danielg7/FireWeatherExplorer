@@ -139,8 +139,15 @@ fxn_weatherCleaner <- function(weatherDB){
   }
   
   if(!"precip_accum_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
-    warning("No rainfall in station data. Giving NAs.")
-    rainfall <- rep(NA, length(weatherDB$STATION$OBSERVATIONS$date_time[[1]]))
+    print("No rainfall in station data. Checking for other options...", quote = FALSE)
+    if(!"precip_accum_one_hour_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
+      print("No other hourly rainfall data found. Printing NAs.", quote = FALSE)
+      rainfall <- rep(NA, length(weatherDB$STATION$OBSERVATIONS$date_time[[1]]))
+    }
+    if("precip_accum_one_hour_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
+      print("Alternative found. Using 'precip_accum_one_hour_set_1'", quote = FALSE)
+      rainfall <- weatherDB$STATION$OBSERVATIONS$precip_accum_one_hour_set_1
+    }
   }
   
   if("precip_accum_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
