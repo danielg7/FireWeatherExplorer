@@ -122,16 +122,16 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                       # which plots to show in the station data check plots.
                       #
                       sidebarPanel(
-                        radioButtons(inputId = "monthlyType",
-                                     label = "Choose monthly plot type:",
-                                     choiceNames = c("Relative Humidity", "Temperature", "Wind Speed"),
-                                     choiceValues = c("RH","Temp","Wind_Speed"),
-                                     selected = "RH"),
-                        radioButtons(inputId = "hourlyType",
-                                     label = "Choose hourly plot type:",
+                        radioButtons(inputId = "summaryType",
+                                     label = "Choose plot type:",
                                      choiceNames = c("Relative Humidity", "Temperature", "Wind Speed"),
                                      choiceValues = c("RH","Temp","Wind_Speed"),
                                      selected = "RH")#,
+                      #  radioButtons(inputId = "hourlyType",
+                       #              label = "Choose hourly plot type:",
+                        #             choiceNames = c("Relative Humidity", "Temperature", "Wind Speed"),
+                         #            choiceValues = c("RH","Temp","Wind_Speed"),
+                          #           selected = "RH")#,
                         #
                         # Include diagnostic plot verbiage by importing a markdown file.
                         #
@@ -148,18 +148,18 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                  tags$h1("Station Summary Plots")),
                         tabsetPanel(
                           tabPanel("Monthly Plots",
-                                   conditionalPanel("input.monthlyType == 'RH'",
+                                   conditionalPanel("input.summaryType == 'RH'",
                                                     plotOutput("month_rh")),
-                                   conditionalPanel("input.monthlyType == 'Temp'",
+                                   conditionalPanel("input.summaryType == 'Temp'",
                                                     plotOutput("month_temp")),
-                                   conditionalPanel("input.monthlyType == 'Wind_Speed'",
+                                   conditionalPanel("input.summaryType == 'Wind_Speed'",
                                                     plotOutput("month_wind"))), 
                           tabPanel("Hourly Plots",
-                                   conditionalPanel("input.hourlyType == 'RH'",
+                                   conditionalPanel("input.summaryType == 'RH'",
                                                     plotOutput("hour_rh")),
-                                   conditionalPanel("input.hourlyType == 'Temp'",
+                                   conditionalPanel("input.summaryType == 'Temp'",
                                                     plotOutput("hour_temp")),
-                                   conditionalPanel("input.hourlyType == 'Wind_Speed'",
+                                   conditionalPanel("input.summaryType == 'Wind_Speed'",
                                                     plotOutput("hour_wind"))
                                    )
                           )
@@ -209,7 +209,7 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                                label = "1 Hr Fuel Moisture (%) *Currently unreliable* :",
                                                min = 0,
                                                max = 30,
-                                               value = c(4,12)),
+                                               value = c(0,30)),
                                    
                                    # FM10 Slides
                                    
@@ -217,7 +217,7 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                                label = "10 Hr Fuel Moisture (%) *Currently unreliable*",
                                                min = 0,
                                                max = 60,
-                                               value = c(5,12))
+                                               value = c(0,60))
                                    ),
                           tabPanel(title = "Wind",tweaks,
                                    # Wind Sliders
@@ -243,9 +243,11 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                 tabsetPanel(
                                   tabPanel("Hours in Prescription",
                                            plotOutput("rh_ts_sub_plot", height = "500px")),
-                                  tabPanel("Percent of Months in Prescription",
+                                  tabPanel("Months in Prescription",
                                            plotOutput("rhplot")),
-                                  tabPanel("Prescription Hours",
+                                  tabPanel("Calendar",
+                                           plotOutput("calendarPlot")),
+                                  tabPanel("Table",
                                            div(DT::dataTableOutput("prescriptionTable"), style = "font-size: 75%; width: 500px"))
                                 )
                                 )
