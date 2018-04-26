@@ -18,3 +18,9 @@ test_that("readInWeather fails if end is greater than start year", {
 test_that("readInWeather fails if StationID is invalid", {
   expect_error(readInWeather(StationID = "ABCD1", County = "Larimer", Start = 2010, End = 2011))
 })
+
+# Function: fxn_WeatherCleaner -------------------------------------------------
+
+test_that("fxn_weatherCleaner handles empty rainfall stations.",{
+  expect_warning()
+})
