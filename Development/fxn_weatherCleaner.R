@@ -1,9 +1,9 @@
 # Compare two datasets
 SD <- "201101012300"
 ED <- "201701012300"
-goodWx <- readInWeather(StationID = "RSOC2",
-                        County = "Larimer",
-                        Start = 2011,
+goodWx <- readInWeather(StationID = "KOMN",
+                        County = "Volusia",
+                        Start = 2015,
                         End = 2017)
 
 goodWxOut <- fxn_weatherCleaner(goodWx)
