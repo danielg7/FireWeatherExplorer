@@ -47,9 +47,7 @@ server <- function(input, output, session) {
       Station_Types <- AllRAWS$STATION$SHORTNAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == County_List[1])]
       Station_NewNames <- paste(Station_Names,Station_Types,sep = " ")
       Station_List <- setNames(Station_ID,Station_NewNames)
-      
-      print(Station_List)
-      
+ 
       selectInput(label = "Select Stations",
                   inputId = "station",
                   choices = Station_List,
@@ -134,6 +132,8 @@ server <- function(input, output, session) {
         incProgress(amount = .25,
                 message = "Done!")
         
+        source("Figures/timeseriesPlots.R")
+        
         })
     })
     
@@ -148,22 +148,14 @@ server <- function(input, output, session) {
           need(input$pickStations, 'Please select a station!')
         )
         
-        tempPlot <- ggplot(data = wx_df,
-                           aes(x = DayOfYear,
-                               y = Temp))+
-          geom_point(alpha = 0.25, size = 0.25)+
-          scale_x_date("Day of the Year", labels = function(x){format(x, "%b")})+
-          scale_y_continuous("Temperature (F)")+
-          labs(title = "Temperature Records",
-               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-          facet_grid(facets = Year ~ .)+
-          theme_bw(base_size=15,
-                   base_family="Avenir")
-        tempPlot
+        # Output the plot as defined in Figures/timeseriesPlots.R
+        
+        plot_timeseries_temperature
+        
         }, height = 100 * length(unique(wx_df$Year)), units = "px") # Scale the size of the plots with the number of years to plot
     
       #
-      # Temperature Timeseries Plot
+      # Rainfall Timeseries Plot
       #
       
       output$precip_ts_plot <- renderPlot({
@@ -171,18 +163,10 @@ server <- function(input, output, session) {
           need(input$pickStations, 'Please select a station!')
         )
         
-        precipPlot <- ggplot(data = wx_df,
-                           aes(x = DayOfYear,
-                               y = as.numeric(HourlyRainfall)))+
-          geom_point(alpha = 0.25, size = 0.25)+
-          scale_x_date("Day of the Year", labels = function(x){format(x, "%b")})+
-          scale_y_continuous("Hourly Precipitation (hr)")+
-          labs(title = "Precipitation",
-               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-          facet_grid(facets = Year ~ .)+
-          theme_bw(base_size=15,
-                   base_family="Avenir")
-        precipPlot
+        # Output the plot as defined in Figures/timeseriesPlots.R
+        
+        plot_timeseries_precipitation
+        
       }, height = 100 * length(unique(wx_df$Year)), units = "px") # Scale the size of the plots with the number of years to plot
       
       
@@ -195,21 +179,10 @@ server <- function(input, output, session) {
           need(input$pickStations, 'Please select a station!')
         )
         
-        rhPlot <- ggplot(data = wx_df,
-                         aes(x = DayOfYear,
-                             y = RH/100))+
-          geom_point(alpha = 0.25, size = 0.25)+
-          scale_x_date("Day of the Year",
-                       labels = function(x) format(x, "%b"),
-                       date_breaks = "1 month")+
-          scale_y_continuous("Relative Humidity (%)",
-                             labels = scales::percent,limits = c(0,1))+
-          labs(title = "Relative Humidity Records",
-               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-          facet_grid(facets = Year ~ .)+
-          theme_bw(base_size=15,
-                   base_family="Avenir")
-        rhPlot
+        # Output the plot as defined in Figures/timeseriesPlots.R
+        
+        plot_timeseries_rh
+        
         }, height = 100 * length(unique(wx_df$Year)), units = "px") # Dynamically scale size of plot
       
       #
@@ -221,21 +194,10 @@ server <- function(input, output, session) {
           need(input$pickStations, 'Please select a station!')
         )
         
-        FMC1_Plot <- ggplot(data = wx_df,
-                         aes(x = DayOfYear,
-                             y = FuelMoisture_1hr/100))+
-          geom_point(alpha = 0.25, size = 0.25)+
-          scale_x_date("Day of the Year",
-                       labels = function(x) format(x, "%b"),
-                       date_breaks = "1 month")+
-          scale_y_continuous("1 Hour Fuel Moisture (%)",
-                             labels = scales::percent)+
-          labs(title = "1 Hr Fuel Moistures (Calculated)",
-               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-          facet_grid(facets = Year ~ .)+
-          theme_bw(base_size=15,
-                   base_family="Avenir")
-        FMC1_Plot
+        # Output the plot as defined in Figures/timeseriesPlots.R
+        
+        plot_timeseries_fmc1
+        
       }, height = 100 * length(unique(wx_df$Year)), units = "px") # Dynamically scale size of plot
       
       #
@@ -247,26 +209,8 @@ server <- function(input, output, session) {
           need(input$pickStations, 'Please select a station!')
         )
         
-        if(FMCMissing == TRUE)
-          FMStatement <- "Calculated"
-        if(FMCMissing == FALSE)
-          FMStatement <- "Instrumented"
+        plot_timeseries_fmc10
         
-        FMC10_Plot <- ggplot(data = wx_df,
-                            aes(x = DayOfYear,
-                                y = FuelMoisture_10hr/100))+
-          geom_point(alpha = 0.25, size = 0.25)+
-          scale_x_date("Day of the Year",
-                       labels = function(x) format(x, "%b"),
-                       date_breaks = "1 month")+
-          scale_y_continuous("10 Hour Fuel Moisture (%)",
-                             labels = scales::percent)+
-          labs(title = paste("10 Hr Fuel Moistures (",FMStatement,")", sep = ""),
-               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-          facet_grid(facets = Year ~ .)+
-          theme_bw(base_size=15,
-                   base_family="Avenir")
-        FMC10_Plot
       }, height = 100 * length(unique(wx_df$Year)), units = "px") # Dynamically scale size of plot
       
       
@@ -279,26 +223,8 @@ server <- function(input, output, session) {
           need(input$pickStations, 'Please select a station!')
         )
         
-        wsPlot <- ggplot(data = wx_df,
-                         aes(x = DayOfYear,
-                             y = Wind_Speed,
-                             color = as.factor(Wind_Direction)))+
-          geom_point(#alpha = 0.25,
-                     size = 0.25)+
-          scale_color_discrete("Wind Direction")+
-          scale_x_date("Day of the Year",
-                       labels = function(x) format(x, "%b"),
-                       date_breaks = "1 month")+
-          scale_y_continuous("Wind Speed (mph)")+
-          labs(title = "Wind Speed Records",
-               subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
-          facet_grid(facets = Year ~ .)+
-          theme_bw(base_size=15,
-                   base_family="Avenir")+
-          guides(size = guide_legend(ncol = 8), colour = guide_legend(override.aes = list(size = 3)))+
-          theme(legend.position="bottom",
-                legend.direction = "horizontal")
-        wsPlot
+        plot_timeseries_windspeed
+        
       }, height = 150 * length(unique(wx_df$Year)), units = "px")
     
       output$totalPlot = DT::renderDataTable({
@@ -639,6 +565,61 @@ server <- function(input, output, session) {
           labs(title = "Percent of Hours That Match Prescription Parameters Per Month", subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
         theme(legend.position="none")
       histPlot
+    })
+    
+    output$calendarPlot <- renderPlot({
+      validate(
+        need(input$pickStations, 'Please select a station!')
+      )
+      
+      wxSubsetByConditions()
+      
+      wx_sub_test <- combinedWx %>%
+        mutate(Month = as.factor(Month)) %>%
+        #mutate(Month = factor(Month,levels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"))) %>%
+        mutate(Yday = yday(DateTime)) %>%
+        mutate(weekday = wday(DateTime)) %>%
+        mutate(weekdayf = weekdays(DateTime, abbreviate = TRUE)) %>%
+        mutate(week = as.numeric(format(DateTime,"%W"))) %>%
+        group_by(Month) %>%
+        mutate(monthweek = 1 + week - min(week)) %>%
+        ungroup() %>%
+        count(Day, Month, Conditions) %>%
+        group_by(Day) %>%
+        mutate(Percent = n / sum(n)) %>%
+        filter(Conditions %in% c("In Prescription","Window")) %>%
+        ungroup()
+      
+      print(levels(wx_sub_test$Month))
+      levels(wx_sub_test$Month) <- c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC")
+      #wx_sub_test$weekdayf <- as.factor(wx_sub_test$weekdayf)
+      #wx_sub_test$weekdayf <- factor(x = wx_sub_test$weekdayf, levels = rev(c("Mon","Tue","Wed","Thu","Fri","Sat","Sun")))
+      
+      windowCount <- wx_sub_test %>%
+        filter(Conditions == "Window")
+      prescriptionCount <- wx_sub_test %>%
+        filter(Conditions == "In Prescription")
+      
+      ggplot(prescriptionCount, aes(x = Month, y = Day, fill = Percent*100)) + 
+        geom_tile(fill = "gray", data = windowCount, aes(Month, Day), size = 0.25, colour = "white")+
+        geom_tile(colour="white",size=0.25) + 
+       # facet_grid(. ~ Month)+
+        coord_fixed()+
+        coord_flip()+
+        #scale_x_continuous(breaks = seq(1,6,1),
+         #                  labels = seq(1,6,1))+
+        scale_fill_distiller("Percent of Hours\nin Prescription", type = "seq",direction = -1,palette = "YlGn")+
+        xlab("Month") + ylab("Day of Month")+
+        scale_y_continuous(breaks =  seq(1,31,1))+
+        scale_x_discrete(limits = rev(levels(prescriptionCount$Month)))+
+        guides("Percent of Hours in Prescription", size = guide_legend(ncol = 8))+
+        labs(title = "Percent of Hours That Match Prescription Parameters Per Day / Week of the Year", subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+        theme_bw(base_size=15, base_family="Avenir")+
+        theme(legend.position="bottom",
+              legend.direction = "horizontal",
+              plot.background = element_blank(),
+              panel.grid = element_blank(),
+              panel.border = element_blank())
     })
   
     output$prescriptionTable = DT::renderDataTable({
