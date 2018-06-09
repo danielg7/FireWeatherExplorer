@@ -1,7 +1,7 @@
-goodWx <- readInWeather(StationID = "KTLH",
-                        County = "Leon",
-                        Start = 2013,
-                        End = 2017)
+goodWx <- readInWeather(StationID = "K28J",
+                        County = "Putnam",
+                        Start = 2015,
+                        End = 2018)
 
 goodWxOut <- fxn_weatherCleaner(goodWx)
 
@@ -23,7 +23,7 @@ MAP_given <- mean(MAP$YearlyRain)
 
 calcKBDI <- function(DateTime,
                      Temp,
-                     HourlyRainfall){
+                     HourlyRainfall,startValue = 0){
   
   # First, munge data into format that works
   
@@ -41,7 +41,7 @@ calcKBDI <- function(DateTime,
   
   
   
-  DailyInputs$kbdi <- c(0,rep(NA, length(DailyInputs$DailyRain)-1))
+  DailyInputs$kbdi <- c(startValue,rep(NA, length(DailyInputs$DailyRain)-1))
 
   
   #Q <- c(0, rep(NA, (length(DailyRain) - 1)))
@@ -77,7 +77,7 @@ calcKBDI <- function(DateTime,
 
 output <- calcKBDI(DateTime = goodWxOut$DateTime,
                    Temp = goodWxOut$Temp,
-                   HourlyRainfall = goodWxOut$HourlyRainfall)
+                   HourlyRainfall = goodWxOut$HourlyRainfall, startValue = 0)
 
 output$Daily <- ymd(output$Daily)
 
@@ -87,3 +87,14 @@ output$Daily <- ymd(output$Daily)
 ggplot(output, aes(x = Daily, y = kbdi))+geom_line()
 
 
+
+
+FOLOWO <- read.table(file = "Development/FOLOWO_2005-2006_KBDI.txt",
+           skip = 29,
+           sep = "")
+FOLOWO <- FOLOWO[c("V1","V2","V5")]
+names(FOLOWO) <- c("Date","Time","KBDI")
+FOLOWO$Date <- mdy(as.character(FOLOWO$Date))
+
+ggplot(output, aes(x = Daily, y = kbdi))+geom_line()+
+  geom_line(color = "red", data = FOLOWO, aes(x = Date, y = KBDI))

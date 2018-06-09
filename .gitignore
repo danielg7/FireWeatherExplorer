@@ -4,3 +4,4 @@ combinedWx.Rda
 packrat/lib*/
 .Rproj.user*
 packrat/src/
+.Rproj.user

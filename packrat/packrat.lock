@@ -137,6 +137,13 @@ GithubUsername: gaborcsardi
 GithubRef: master
 GithubSha1: f4a116a6bfc338592e6dfd7fcc2b027da87c7ab5
 
+Package: devtools
+Source: CRAN
+Version: 1.13.5
+Hash: 80061b2ad6853fd3665bf883123a1b1a
+Requires: digest, git2r, httr, jsonlite, memoise, rstudioapi, whisker,
+    withr
+
 Package: dichromat
 Source: CRAN
 Version: 2.0-0
@@ -190,6 +197,11 @@ Source: CRAN
 Version: 0.4.1
 Hash: 9005bf3e4cc16e9c201d77905372a411
 Requires: ggplot2, plyr, scales
+
+Package: git2r
+Source: CRAN
+Version: 0.21.0
+Hash: 64747922e287be74e8e8b46c107fd3ef
 
 Package: glue
 Source: CRAN
@@ -297,6 +309,12 @@ Source: CRAN
 Version: 0.8
 Hash: 045d7c594d503b41f1c28946d076c8aa
 Requires: mime
+
+Package: memoise
+Source: CRAN
+Version: 1.1.0
+Hash: 410fcd334bc626db100237cc1370f2e9
+Requires: digest
 
 Package: mesowest
 Source: github
@@ -542,6 +560,11 @@ GithubRepo: webdriver
 GithubUsername: rstudio
 GithubRef: master
 GithubSha1: 52facdbff635d3d0e03c84a6f6b2a17ed1526c3e
+
+Package: whisker
+Source: CRAN
+Version: 0.3-2
+Hash: 803d662762e532705c2c066a82d066e7
 
 Package: withr
 Source: github
