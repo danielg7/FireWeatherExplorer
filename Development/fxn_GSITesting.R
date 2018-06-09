@@ -2,11 +2,12 @@ library("geosphere")
 library("zoo")
 library("dplyr")
 library("lubridate")
+library("ggplot2")
 
 testWx <- readInWeather(StationID = "KS25",
                         County = "McKenzie",
-                        Start = 2014,
-                        End = 2014)
+                        Start = 2009,
+                        End = 2013)
 
 testWx_cleaned <- fxn_weatherCleaner(testWx)
 
@@ -14,10 +15,6 @@ testWx_cleaned <- fxn_weatherCleaner(testWx)
 
 testWx_cleaned$DayLength <- geosphere::daylength(lat = 47.663722,
                      doy = yday(x = testWx_cleaned$DateTime))
-
-ggplot(data = testWx_cleaned, aes(x = DayOfYear, y = DayLength))+
-  geom_point()+
-  facet_wrap(~Year)
 
 calcGSI <- function(DateTime, Temp, RH, Latitude)
 {
@@ -139,6 +136,8 @@ findGreenupDates <- function(Year, Yday,rollGSI){
   
   growingSeason <- merge(greenup,senesence,by = "Year")
   
+  growingSeason$GreenUpDate <- as.Date(growingSeason$GreenUpDate, format = "%j", origin=paste0("1.1.",growingSeason$Year))
+  growingSeason$SenesenceDate <- as.Date(growingSeason$SenesenceDate, format = "%j", origin=paste0("1.1.",growingSeason$Year))
   
     return(growingSeason)
 }
@@ -148,17 +147,28 @@ seasonDF <- findGreenupDates(Year = testGSIOutput$Year,
                              testGSIOutput$rollGSI)
 
 
-ggplot(data = testGSIOutput, aes(x = Yday, y = rollGSI))+
+
+plot_timeseries_GSI <- ggplot(data = testGSIOutput,
+                                      aes(x = Yday,
+                                          y = rollGSI))+
   geom_line(color = "gray50", alpha = .5, aes(x = Yday, y = GSI))+
   geom_line(color = "black")+
   geom_vline(data = seasonDF, color = "green", aes(xintercept = GreenUpDate))+
   geom_vline(data = seasonDF, color = "red", aes(xintercept = SenesenceDate))+
-  facet_wrap(~Year)
+  scale_x_date("Month", labels = function(x){format(x, "%b")},
+               date_breaks = "1 month")+
+  scale_y_continuous("Growing Season Index")+
+  labs(title = "Growing Season Index",
+       subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+  facet_grid(facets = Year ~ .)+
+  theme_bw(base_size=15, base_family="Avenir")
+plot_timeseries_GSI
 
 
 
-liveFuelMoistures <- function(DateTime, GreenupDates, rollGSI){
-  workingDF <- data.frame(DateTime,Year = year(DateTime),rollGSI)
+
+liveFuelMoistures <- function(Yday, Year, GreenupDates, rollGSI){
+  workingDF <- data.frame(Yday,Year,rollGSI)
   workingDF$diffGSI <- c(0,diff(workingDF$rollGSI))
   
   workingDF$WoodyLiveFM <- NA
@@ -189,8 +199,8 @@ liveFuelMoistures <- function(DateTime, GreenupDates, rollGSI){
   for(i in unique(GreenupDates$Year)){
     print(i)
     
-    minDateDF <- filter(workingDF, Year == i) %>% summarise(minDate = min(DateTime, na.rm = T))
-    maxDateDF <- filter(workingDF, Year == i) %>% summarise(maxDate = max(DateTime, na.rm = T))
+    minDateDF <- filter(workingDF, Year == i) %>% summarise(minDate = min(Yday, na.rm = T))
+    maxDateDF <- filter(workingDF, Year == i) %>% summarise(maxDate = max(Yday, na.rm = T))
     
     minDate <- minDateDF[1,1]
     maxDate <- maxDateDF[1,1]
@@ -205,11 +215,11 @@ liveFuelMoistures <- function(DateTime, GreenupDates, rollGSI){
     #                                                                                                    minWoody,
     #                                                                                                    workingDF[which(workingDF$DateTime >= GUDate & workingDF$DateTime <= SDate),]$diffGSI,
     #                                                                                                    maxWoody)
-    workingDF[which(workingDF$DateTime >= GUDate & workingDF$DateTime <= SDate& workingDF$Year == i),]$WoodyLiveFM <- 300 * cumsum(workingDF[which(workingDF$DateTime >= GUDate & workingDF$DateTime <= SDate  & workingDF$Year == i),]$diffGSI ) + minWoody
+    workingDF[which(workingDF$Yday >= GUDate & workingDF$Yday <= SDate& workingDF$Year == i),]$WoodyLiveFM <- 300 * cumsum(workingDF[which(workingDF$Yday >= GUDate & workingDF$Yday <= SDate  & workingDF$Year == i),]$diffGSI ) + minWoody
     
     
-    workingDF[which(workingDF$DateTime < GUDate  & workingDF$Year == i),]$HerbaceousLiveFM <- 30
-    workingDF[which(workingDF$DateTime > SDate  & workingDF$Year == i),]$HerbaceousLiveFM <- 30
+    workingDF[which(workingDF$Yday < GUDate  & workingDF$Year == i),]$HerbaceousLiveFM <- 30
+    workingDF[which(workingDF$Yday > SDate  & workingDF$Year == i),]$HerbaceousLiveFM <- 30
     
     GUDate <- NA
     SDate <- NA
@@ -219,9 +229,10 @@ liveFuelMoistures <- function(DateTime, GreenupDates, rollGSI){
   return(workingDF)
 }
 
-testOutput <- liveFuelMoistures(DateTime = test$DateTime,
+testOutput <- liveFuelMoistures(Yday = testGSIOutput$Yday,
+                                Year = testGSIOutput$Year,
                                 GreenupDates = seasonDF,
-                                rollGSI = test$rollGSI)
+                                rollGSI = testGSIOutput$rollGSI)
 
 testOutput
 

@@ -114,3 +114,20 @@ plot_timeseries_windspeed <- ggplot(data = wx_df,
   theme(legend.position="bottom",
         legend.direction = "horizontal")
 
+# Wind Speed --------------------------------------------------------------
+
+plot_timeseries_GSI <- ggplot(data = GSIOutput,
+                              aes(x = Yday,
+                                  y = rollGSI))+
+  geom_line(color = "gray50", alpha = .5, aes(x = Yday, y = GSI))+
+  geom_line(color = "black")+
+  geom_vline(data = seasonDF, color = "green", aes(xintercept = GreenUpDate))+
+  geom_vline(data = seasonDF, color = "red", aes(xintercept = SenesenceDate))+
+  scale_x_date("Month", labels = function(x){format(x, "%b")},
+               date_breaks = "1 month")+
+  scale_y_continuous("Growing Season Index")+
+  labs(title = "Growing Season Index and Green Up / Senesence Dates",
+       subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+  facet_grid(facets = Year ~ .)+
+  theme_bw(base_size=15, base_family="Avenir")
+plot_timeseries_GSI

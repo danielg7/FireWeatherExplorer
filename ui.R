@@ -77,8 +77,8 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                       sidebarPanel(
                         radioButtons(inputId = "diagnosticType",
                                      label = "Choose plot type:",
-                                     choiceNames = c("Relative Humidity", "Temperature", "Wind Speed", "1 Hr Fuel Moisture *Currently unreliable*","10 hr Fuel Moisture *Currently unreliable*", "Hourly Precipitation"),
-                                     choiceValues = c("RH","Temp","Wind_Speed","FMC1","FMC10","HourlyPrecip"),
+                                     choiceNames = c("Relative Humidity", "Temperature", "Wind Speed", "1 Hr Fuel Moisture *Currently unreliable*","10 hr Fuel Moisture *Currently unreliable*", "Hourly Precipitation","Growing Season Index"),
+                                     choiceValues = c("RH","Temp","Wind_Speed","FMC1","FMC10","HourlyPrecip","GSI"),
                                      selected = "RH"),
                         #
                         # Include diagnostic plot verbiage by importing a markdown file.
@@ -104,7 +104,9 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                           conditionalPanel("input.diagnosticType == 'FMC10'",
                                            plotOutput("fmc10_ts_plot")),
                           conditionalPanel("input.diagnosticType == 'HourlyPrecip'",
-                                           plotOutput("precip_ts_plot"))
+                                           plotOutput("precip_ts_plot")),
+                          conditionalPanel("input.diagnosticType == 'GSI'",
+                                           plotOutput("gsi_ts_plot"))
                         ),
                         tabPanel("Data",
                                  div(DT::dataTableOutput("totalPlot"), style = "font-size: 75%; width: 500px"),

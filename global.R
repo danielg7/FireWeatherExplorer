@@ -45,6 +45,8 @@ stationRxValues <- data.frame(Wind.Low = NA,
 map <- NULL
 wx_df <- NULL
 wx_dl <- NULL
+GSI_output <- NULL
+seasonDF <- NULL
 stationMetadata <- NULL
 combinedWx <- NULL
 wx_sub_countHours <- NULL

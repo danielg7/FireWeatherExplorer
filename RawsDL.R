@@ -263,3 +263,126 @@ fxn_weatherCleaner <- function(weatherDB){
   return(newWxDF)
   
 }
+
+# Calculate GSI
+
+calcGSI <- function(DateTime, Temp, RH, Latitude)
+{
+  originalDF <- data.frame(DateTime,Temp,RH)
+  
+  workingDF <- data.frame(DateTime,Temp,RH)
+  workingDF$Year <- lubridate::year(DateTime)
+  workingDF$Yday <- lubridate::yday(x = workingDF$DateTime)
+  workingDF$DayOfYear <- as.Date(paste("2000-",format(workingDF$DateTime, "%j")), "%Y-%j")
+  workingDF$DayLength <- geosphere::daylength(lat = Latitude,
+                                              doy = workingDF$Yday)
+  
+  workingDF <- filter(workingDF, hour(DateTime) == 13)
+  
+  
+  get.es <- function(temp){
+    TempC <- (temp - 32) / 1.8
+    
+    es <- 6.11 * exp((2.5e6 / 461) * (1 / 273 - 1 / (273 + TempC)))
+    return(es)
+  }
+  
+  get.vpd <- function(rh, temp){
+    ## calculate saturation vapor pressure
+    es <- get.es(temp)
+    ## calculate vapor pressure deficit
+    vpd <- ((100 - rh) / 100) * es * 100
+    return(vpd)
+  }
+  
+  workingDF$VPD <- get.vpd(rh = workingDF$RH,
+                           temp = workingDF$Temp)
+  
+  iGSI_hourly <- function(MinimumTemp, VPD, Photoperiod){
+    
+    
+    # Calculate ITmin
+    
+    if(MinimumTemp >= 41 & !is.na(MinimumTemp))
+      iTmin <- 1
+    if(MinimumTemp < 41 & MinimumTemp > 28 & !is.na(MinimumTemp))
+      iTmin <- (MinimumTemp - 28)/(41 - 28)
+    if(MinimumTemp <= 28 & !is.na(MinimumTemp))
+      iTmin <- 0
+    if(is.na(MinimumTemp))
+      iTmin <- NA
+    
+    # Calculate iVPD
+    
+    if(VPD >= 4100 & !is.na(VPD))
+      iVPD <- 0
+    if(VPD > 900 & VPD < 4100 & !is.na(VPD))
+      iVPD <- 1 - (VPD - 900)/(4100 - 900)
+    if(VPD <= 900 & !is.na(VPD))
+      iVPD <- 1
+    if(is.na(VPD))
+      iVPD <- NA
+    
+    # Calculate iPhoto
+    
+    if(Photoperiod <= 10 & !is.na(Photoperiod))
+      iPhoto <- 0
+    if(Photoperiod > 10 & Photoperiod < 11 & !is.na(Photoperiod))
+      iPhoto <- (Photoperiod - 10)/(11 - 10)
+    if(Photoperiod >= 11 & !is.na(Photoperiod))
+      iPhoto <- 1
+    if(is.na(Photoperiod))
+      iPhoto <- NA
+    
+    iGSI <- iTmin  * iVPD  * iPhoto
+    
+    return(iGSI)
+  }
+  
+  workingDF_daily <- workingDF %>%
+    group_by(Year,Yday) %>%
+    summarise(Tmin = min(Temp, na.rm = TRUE), VPD = max(VPD, na.rm = TRUE), DayLength = max(DayLength), na.rm = TRUE) %>%
+    ungroup()
+  
+  workingDF_daily$GSI <- mapply(iGSI_hourly, workingDF_daily$Tmin, workingDF_daily$VPD, workingDF_daily$DayLength)
+  
+  workingDF_daily <- workingDF_daily %>%
+    group_by(Year,Yday) %>%
+    mutate(maxGSI = max(GSI, na.rm = TRUE))# %>% ungroup()
+  
+  workingDF_daily$rollGSI <- rollapply(data = workingDF_daily$maxGSI,  # original series
+                                       width = 21,  # width of the rolling window
+                                       FUN = mean, na.rm = T,  # Any arbitrary function
+                                       fill = NA)
+  
+  workingDF_daily$Yday <- as.Date(workingDF_daily$Yday, format = "%j", origin=paste0("1.1.",workingDF_daily$Year))
+  return(workingDF_daily)
+  
+}
+
+findGreenupDates <- function(Year, Yday,rollGSI){
+  workingDF <- data.frame(Year, Yday,rollGSI)
+  
+  greenup <- workingDF %>%
+    group_by(Year) %>%
+    filter(rollGSI >= 0.5) %>%
+    arrange(Yday) %>%
+    ungroup() %>%
+    group_by(Year) %>%
+    summarise(GreenUpDate = min(Yday))
+  
+  senesence <- workingDF %>%
+    group_by(Year) %>%
+    filter(rollGSI >= 0.5) %>%
+    arrange(Yday) %>%
+    ungroup() %>%
+    group_by(Year) %>%
+    summarise(SenesenceDate = max(Yday))
+  
+  growingSeason <- merge(greenup,senesence,by = "Year")
+  
+  growingSeason$GreenUpDate <- as.Date(growingSeason$GreenUpDate, format = "%j", origin=paste0("1.1.",growingSeason$Year))
+  growingSeason$SenesenceDate <- as.Date(growingSeason$SenesenceDate, format = "%j", origin=paste0("1.1.",growingSeason$Year))
+  
+  return(growingSeason)
+}

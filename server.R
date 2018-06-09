@@ -126,10 +126,27 @@ server <- function(input, output, session) {
         wx_df <<- fxn_weatherCleaner(wx_dl)
         
         #
+        # Pass the output data from the reader function to a cleaner function.
+        #
+        
+        incProgress(amount = .10,
+                    message = "Calculating GSI...")
+        
+        
+        GSIOutput <<- calcGSI(DateTime = wx_df$DateTime,
+                                 Temp = wx_df$Temp,
+                                 RH = wx_df$RH,
+                                 Latitude = as.numeric(stationMetadata$STATION$LATITUDE))
+        
+        seasonDF <<- findGreenupDates(Year = GSIOutput$Year,
+                                     Yday = GSIOutput$Yday,
+                                     GSIOutput$rollGSI)
+        
+        #
         # Final increment...let them know it's done!
         #
         
-        incProgress(amount = .25,
+        incProgress(amount = .15,
                 message = "Done!")
         
         source("Figures/timeseriesPlots.R")
@@ -226,6 +243,20 @@ server <- function(input, output, session) {
         plot_timeseries_windspeed
         
       }, height = 150 * length(unique(wx_df$Year)), units = "px")
+      
+      #
+      # Wind speed time series plot
+      #
+      
+      output$gsi_ts_plot <- renderPlot({
+        validate(
+          need(input$pickStations, 'Please select a station!')
+        )
+        
+        plot_timeseries_GSI
+        
+      }, height = 150 * length(unique(wx_df$Year)), units = "px")
+      
     
       output$totalPlot = DT::renderDataTable({
                                                validate(
