@@ -58,12 +58,12 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                         uiOutput('County'),
                         uiOutput('station'),
                         uiOutput('POR'),
-                        actionButton("pickStations", "Submit")
+                        actionButton("pickStations", "Download Station Data")
                         ),
                       mainPanel(
-                        fluidRow(htmlOutput("metadataTitle")),
-                        fluidRow(leafletOutput("station_location")),
-                        fluidRow(htmlOutput("metadata"))
+                      #  fluidRow(htmlOutput("metadataTitle")),
+                        leafletOutput("station_location", height = "600")
+                       # fluidRow(htmlOutput("metadata"))
                         )
                         
                       )

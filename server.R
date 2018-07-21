@@ -688,17 +688,30 @@ server <- function(input, output, session) {
     # Draw the map
 
     output$station_location <- renderLeaflet({
+      meta_StationName <- paste("<h4>", stationMetadata$STATION$NAME, " (",stationMetadata$STATION$STID,") </h4>", sep = "")
+      meta_type <- paste("<b>Station Type: </b>", stationMetadata$STATION$SHORTNAME)
+      meta_GACC <- paste("<b>GACC: </b>", stationMetadata$STATION$GACC)
+      meta_FireWxZone <- paste("<b>NWS Fire Weather Zone: </b>", stationMetadata$STATION$NWSFIREZONE)
+      meta_Range <- paste("<b>Period of Record: </b>",
+                          min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
+                          " - ",
+                          max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
+                          sep = "")
+      meta_LatLong <- paste("<b>Lat / Long: </b>",as.character(stationMetadata$STATION$LATITUDE),", ",as.character(stationMetadata$STATION$LONGITUDE),
+                            sep = "")
+      metadata <- HTML(paste(meta_StationName,meta_type, meta_Range, meta_LatLong, meta_GACC, meta_FireWxZone, sep = '<br>'))
+      
       map <<- leaflet() %>%
         addProviderTiles(providers$OpenTopoMap,
                          options = providerTileOptions(noWrap = TRUE)
         ) %>%
-        addMarkers(label = stationMetadata$STATION$NAME,
+        addMarkers(label = metadata,
                    lat = as.numeric(stationMetadata$STATION$LATITUDE),
                    lng = as.numeric(stationMetadata$STATION$LONGITUDE),
-                   labelOptions = labelOptions(noHide = TRUE)) %>%
+                   labelOptions = labelOptions(noHide = TRUE, direction = "bottom")) %>%
         setView(lat = as.numeric(stationMetadata$STATION$LATITUDE),
                 lng = as.numeric(stationMetadata$STATION$LONGITUDE),
-                zoom = 13) %>%
+                zoom = 11) %>%
         addMiniMap(
           tiles = providers$Esri.WorldStreetMap,
           toggleDisplay = TRUE)
@@ -707,30 +720,7 @@ server <- function(input, output, session) {
                 
   })
     
-    # Draw the metadata
-    
-    output$metadata <- renderUI({
-      meta_StationName <- paste("Station Name: ", stationMetadata$STATION$NAME, " (",stationMetadata$STATION$STID,")", sep = "")
-      meta_type <- paste("Station Type:", stationMetadata$STATION$SHORTNAME)
-      meta_GACC <- paste("GACC:", stationMetadata$STATION$GACC)
-      meta_FireWxZone <- paste("NWS Fire Weather Zone:", stationMetadata$STATION$NWSFIREZONE)
-      meta_Range <- paste("Period of Record: ",
-                          min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
-                          " - ",
-                          max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
-                          sep = "")
-      meta_LatLong <- paste("Lat / Long: ",as.character(stationMetadata$STATION$LATITUDE),", ",as.character(stationMetadata$STATION$LONGITUDE),
-                            sep = "")
-      HTML(paste('<br/>',meta_type, meta_Range, meta_LatLong, meta_GACC, meta_FireWxZone, sep = '<br/>'))
-    })
-    
-    # Draw the metadata title
-    
-    output$metadataTitle <- renderUI({
-      meta_StationName <- paste(stationMetadata$STATION$NAME, " (",stationMetadata$STATION$STID,")", sep = "")
-      
-      HTML(paste('<h1>',meta_StationName,'</h1>',sep = ""))
-    })
+  
     
     # Change the period of record indicator
     
