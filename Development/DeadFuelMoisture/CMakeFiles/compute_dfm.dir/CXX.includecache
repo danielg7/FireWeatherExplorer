@@ -1,0 +1,68 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/danielg7/Dropbox/Fire Management/FireWeatherExplorer/Development/DeadFuelMoisture/computeFuelMoisture.cpp
+stdlib.h
+-
+string.h
+-
+deadfuelmoisture.h
+/Users/danielg7/Dropbox/Fire Management/FireWeatherExplorer/Development/DeadFuelMoisture/deadfuelmoisture.h
+iostream
+-
+stdio.h
+-
+
+/Users/danielg7/Dropbox/Fire Management/FireWeatherExplorer/Development/DeadFuelMoisture/deadfuelmoisture.cpp
+algorithm
+-
+cstdlib
+-
+ctime
+-
+iostream
+-
+sstream
+-
+deadfuelmoisture.h
+/Users/danielg7/Dropbox/Fire Management/FireWeatherExplorer/Development/DeadFuelMoisture/deadfuelmoisture.h
+
+/Users/danielg7/Dropbox/Fire Management/FireWeatherExplorer/Development/DeadFuelMoisture/deadfuelmoisture.h
+cmath
+-
+iomanip
+-
+iostream
+-
+ostream
+-
+string
+-
+vector
+-
+config.h
+-
+semtime.h
+/Users/danielg7/Dropbox/Fire Management/FireWeatherExplorer/Development/DeadFuelMoisture/semtime.h
+
+/Users/danielg7/Dropbox/Fire Management/FireWeatherExplorer/Development/DeadFuelMoisture/semtime.cpp
+semtime.h
+/Users/danielg7/Dropbox/Fire Management/FireWeatherExplorer/Development/DeadFuelMoisture/semtime.h
+
+/Users/danielg7/Dropbox/Fire Management/FireWeatherExplorer/Development/DeadFuelMoisture/semtime.h
+ctime
+-
+iomanip
+-
+iostream
+-
+ostream
+-
+config.h
+-
+
