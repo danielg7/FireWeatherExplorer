@@ -46,7 +46,7 @@ server <- function(input, output, session) {
       Station_Names <- AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == County_List[1])]
       Station_Types <- AllRAWS$STATION$SHORTNAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == County_List[1])]
       Station_NewNames <- paste(Station_Names,Station_Types,sep = " ")
-      Station_List <- setNames(Station_ID,Station_NewNames)
+      Station_List <<- setNames(Station_ID,Station_NewNames)
  
       selectInput(label = "Select Stations",
                   inputId = "station",
@@ -71,7 +71,7 @@ server <- function(input, output, session) {
       Station_Names <- AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == input$County)]
       Station_Types <- AllRAWS$STATION$SHORTNAME[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == input$County)]
       Station_NewNames <- paste(Station_Names,Station_Types,sep = " ")
-      Station_List <- setNames(Station_ID,Station_NewNames)
+      Station_List <<- setNames(Station_ID,Station_NewNames)
       
       selectInput(label = "Select Stations",
                   inputId = "station",
@@ -446,7 +446,7 @@ server <- function(input, output, session) {
     
   })
   
-  # Subset Data Plots -----------------------------------------------
+# Subset Data Plots -----------------------------------------------
   
   #
   # Clean Data Based on Prescription
@@ -685,6 +685,8 @@ server <- function(input, output, session) {
     
     stationMetadata <<- wxStationMetadata(StationID = StationID)
     
+    
+    
     # Draw the map
 
     output$station_location <- renderLeaflet({
@@ -742,46 +744,36 @@ server <- function(input, output, session) {
     observeEvent(input$station_location_marker_click, {
       click <- input$station_location_marker_click
       
-      Station_Clicked <- AllLocations[which(AllLocations$Lat == click$lat & AllLocations$Long == click$lng), ]$StationName
-      State_Clicked <- AllLocations[which(AllLocations$Lat == click$lat & AllLocations$Long == click$lng), ]$State
-      County_Clicked <- AllLocations[which(AllLocations$Lat == click$lat & AllLocations$Long == click$lng), ]$County
+      ClickedStationID <- AllRAWS$STATION$STID[which(AllRAWS$STATION$LATITUDE == click$lat & AllRAWS$STATION$LONGITUDE == click$lng)]
+      ClickedStationState <- AllRAWS$STATION$STATE[which(AllRAWS$STATION$LATITUDE == click$lat & AllRAWS$STATION$LONGITUDE == click$lng)]
+      ClickedStationCounty <- AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$LATITUDE == click$lat & AllRAWS$STATION$LONGITUDE == click$lng)]
       
-      #print(paste(Station_Clicked,County_Clicked,State_Clicked))
+      print(paste(ClickedStationID,ClickedStationState,ClickedStationCounty))
       
-      #
-      # Update station input
-      #
+      StationID <<- ClickedStationID
+      stationMetadata <<- wxStationMetadata(StationID = StationID)
       
-      Station_List <- unique(AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == State_Clicked & AllRAWS$STATION$COUNTY == County_Clicked)])
+      County_List <- sort(as.character(unique(AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$STATE == ClickedStationState)])))
+      
+      
+      #Station_Names <- AllRAWS$STATION$NAME[which(AllRAWS$STATION$STATE == ClickedStationState & AllRAWS$STATION$COUNTY == ClickedStationCounty)]
+      #Station_Types <- AllRAWS$STATION$SHORTNAME[which(AllRAWS$STATION$STATE == ClickedStationState & AllRAWS$STATION$COUNTY == ClickedStationCounty)]
+      #Station_NewNames <- paste(Station_Names,Station_Types,sep = " ")
+      #Station_List <- setNames(object = Station_ID,Station_NewNames)
       
       updateSelectInput(session = session,
                         inputId = "station",
                         label = "Select Stations",
                         choices = Station_List, 
-                        selected = Station_Clicked)
+                        selected = StationID)
       
-      #
-      # Update county input
-      #
-      
-      County_List <- sort(as.character(unique(AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$STATE == State_Clicked)])))
-      
-      updateSelectInput(session = session,
-                        inputId = "county",
-                        label = "Select County",
-                        choices = County_List, 
-                        selected = County_Clicked)
-      
-      #
-      # Update state input
-      #
-      
-      updateSelectInput(session = session,
-                        inputId = 'State',
-                        label = "Select State",
-                        choices = State_List,
-                        selected = State_Clicked)
-      
+     updateSliderInput(session = session,
+                       label = 'Select Period of Record',
+                inputId = "Year",
+                min = min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
+                max = max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
+                value = c(min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD)))+1,
+                      max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD)))))
     })
     
     observe({
