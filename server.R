@@ -73,6 +73,11 @@ server <- function(input, output, session) {
       Station_NewNames <- paste(Station_Names,Station_Types,sep = " ")
       Station_List <<- setNames(Station_ID,Station_NewNames)
       
+      Stations_In_County <<- data.frame("Station_ID" = as.character(Station_ID),
+                                       "Station_NewNames" = as.character(Station_NewNames),
+                                       "Station_Lat"= as.numeric(as.character(AllRAWS$STATION$LATITUDE[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == input$County)])),
+                                       "Station_Long" = as.numeric(as.character(AllRAWS$STATION$LONGITUDE[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == input$County)])))
+      
       selectInput(label = "Select Stations",
                   inputId = "station",
                   choices = Station_List,
@@ -703,17 +708,29 @@ server <- function(input, output, session) {
                             sep = "")
       metadata <- HTML(paste(meta_StationName,meta_type, meta_Range, meta_LatLong, meta_GACC, meta_FireWxZone, sep = '<br>'))
       
+      #print(Stations_In_County)
+      
+      if(nrow(Stations_In_County > 1)){
+      maxLong <- max(Stations_In_County$Station_Long)
+      maxLat <- max(Stations_In_County$Station_Lat)
+      minLong <- min(Stations_In_County$Station_Long)
+      minLat <- min(Stations_In_County$Station_Lat)}
+      
+      if(nrow(Stations_In_County == 1)){
+        maxLong <- max(Stations_In_County$Station_Long)+0.25
+        maxLat <- max(Stations_In_County$Station_Lat)+.25
+        minLong <- min(Stations_In_County$Station_Long)-0.25
+        minLat <- min(Stations_In_County$Station_Lat)-0.25}
+      
       map <<- leaflet() %>%
         addProviderTiles(providers$OpenTopoMap,
                          options = providerTileOptions(noWrap = TRUE)
         ) %>%
-        addMarkers(label = metadata,
-                   lat = as.numeric(stationMetadata$STATION$LATITUDE),
-                   lng = as.numeric(stationMetadata$STATION$LONGITUDE),
+        addMarkers(label = as.character(Stations_In_County$Station_NewNames),
+                   lat = as.numeric(as.character(Stations_In_County$Station_Lat)),
+                   lng = as.numeric(as.character(Stations_In_County$Station_Long)),
                    labelOptions = labelOptions(noHide = TRUE, direction = "bottom")) %>%
-        setView(lat = as.numeric(stationMetadata$STATION$LATITUDE),
-                lng = as.numeric(stationMetadata$STATION$LONGITUDE),
-                zoom = 11) %>%
+        fitBounds(minLong,minLat,maxLong,maxLat) %>%
         addMiniMap(
           tiles = providers$Esri.WorldStreetMap,
           toggleDisplay = TRUE)
@@ -743,14 +760,26 @@ server <- function(input, output, session) {
     
     observeEvent(input$station_location_marker_click, {
       click <- input$station_location_marker_click
+      click$lat <- round(as.numeric(click$lat), 6)
+      click$lng <- round(as.numeric(click$lng), 6)
       
-      ClickedStationID <- AllRAWS$STATION$STID[which(AllRAWS$STATION$LATITUDE == click$lat & AllRAWS$STATION$LONGITUDE == click$lng)]
-      ClickedStationState <- AllRAWS$STATION$STATE[which(AllRAWS$STATION$LATITUDE == click$lat & AllRAWS$STATION$LONGITUDE == click$lng)]
-      ClickedStationCounty <- AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$LATITUDE == click$lat & AllRAWS$STATION$LONGITUDE == click$lng)]
+      print(paste("Clicked: ",click$lng,", ",click$lat), sep = "")
+     # print(str(click))
+      
+    #  print(Stations_In_County)
+     # print(str(Stations_In_County))
+      
+      #ClickedStationID <- as.character(Stations_In_County$Station_ID[which(Stations_In_County$Station_Lat == click$lat & Stations_In_County$Station_Long == click$lng)])
+      ClickedStationID <- AllRAWS$STATION$STID[which(as.numeric(as.character(AllRAWS$STATION$LATITUDE)) == click$lat & as.numeric(as.character(AllRAWS$STATION$LONGITUDE)) == click$lng)]
+      ClickedStationState <- AllRAWS$STATION$STATE[which(AllRAWS$STATION$STID == ClickedStationID)]
+      ClickedStationCounty <- AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$STID == ClickedStationID)]
       
       print(paste(ClickedStationID,ClickedStationState,ClickedStationCounty))
       
-      StationID <<- ClickedStationID
+      StationID <<- AllRAWS$STATION$STID[which(AllRAWS$STATION$STID == ClickedStationID & AllRAWS$STATION$COUNTY == ClickedStationCounty)]
+      
+      print(paste("Redefined stationID from click:",StationID,sep = " "))
+      
       stationMetadata <<- wxStationMetadata(StationID = StationID)
       
       County_List <- sort(as.character(unique(AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$STATE == ClickedStationState)])))
@@ -772,7 +801,7 @@ server <- function(input, output, session) {
                 inputId = "Year",
                 min = min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
                 max = max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
-                value = c(min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD)))+1,
+                value = c(round(min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD)))+1),
                       max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD)))))
     })
     

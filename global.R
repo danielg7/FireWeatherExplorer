@@ -54,6 +54,7 @@ StartDate_formatted <- NULL
 EndDate_formatted <- NULL
 FMCMissing <- NULL
 Station_List <- NULL
+Stations_In_County <- NULL
 windDirList <- 
   c("N",
     "NNE",
