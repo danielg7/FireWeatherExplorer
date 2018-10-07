@@ -21,6 +21,6 @@ test_that("readInWeather fails if StationID is invalid", {
 
 # Function: fxn_WeatherCleaner -------------------------------------------------
 
-test_that("fxn_weatherCleaner handles empty rainfall stations.",{
-  expect_warning()
-})
+#test_that("fxn_weatherCleaner handles empty rainfall stations.",{
+#  expect_warning()
+#})
