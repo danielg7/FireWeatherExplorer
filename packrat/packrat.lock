@@ -27,8 +27,8 @@ Requires: base64enc
 
 Package: R6
 Source: CRAN
-Version: 2.2.2
-Hash: b2366cd9d2f3851a5704b4e192b985c2
+Version: 2.3.0
+Hash: 8eccabbf292b5aba632985cde6406fc3
 
 Package: RColorBrewer
 Source: CRAN
@@ -48,13 +48,13 @@ Hash: fb672e20eb6f3010a3639f855d8ef6de
 
 Package: Rcpp
 Source: CRAN
-Version: 0.12.15
-Hash: a419463fc86b3ecc7338ae3ac3bbb268
+Version: 0.12.19
+Hash: fdff9c3aa69adac28cd5c45cd250c9da
 
 Package: RcppArmadillo
 Source: CRAN
 Version: 0.8.400.0.0
-Hash: 06d74d305dc7f3c53054e88efd49b097
+Hash: 16b4faa85ab1ea49ea3017cb2ab3615e
 Requires: Rcpp
 
 Package: TTR
@@ -86,7 +86,7 @@ Hash: e3a02070cf705d3ad1c5af1635a515a3
 Package: bindrcpp
 Source: CRAN
 Version: 0.2
-Hash: 2d69ff431a54f6c4a750754b88c7e0af
+Hash: a6125b28eda317bbb0eb79206f935c9d
 Requires: Rcpp, bindr, plogr
 
 Package: bitops
@@ -151,13 +151,13 @@ Hash: 08eed0c80510af29bb15f840ccfe37ce
 
 Package: digest
 Source: CRAN
-Version: 0.6.15
-Hash: 1f202ebd812ac7192be3739245746a13
+Version: 0.6.17
+Hash: 6bd8bf6c0430a024a994f2481c2d8516
 
 Package: dplyr
 Source: CRAN
 Version: 0.7.4
-Hash: c15022862b3eb28a528656b4b3b84e89
+Hash: adc4e3c5933d304df47c1f28d676672d
 Requires: BH, R6, Rcpp, assertthat, bindrcpp, glue, magrittr,
     pkgconfig, plogr, rlang, tibble
 
@@ -167,10 +167,20 @@ Version: 0.10.1
 Hash: 54d95f4ec6d0300100413ed0127d89ae
 Requires: stringr
 
+Package: firebehavioR
+Source: github
+Version: 0.1.0
+Hash: a72bbdf9cb7f94a793890938be18f3b6
+Requires: ggplot2
+GithubRepo: firebehavioR
+GithubUsername: EcoFire
+GithubRef: master
+GithubSha1: 0241dc60a62fd2c66fa3b514423c05f7e85b4f05
+
 Package: forecast
 Source: CRAN
 Version: 8.2
-Hash: 881c688ece827fd3f3c9d758839191c0
+Hash: 546c5eff23e0f3c26622ec607ca4171c
 Requires: Rcpp, RcppArmadillo, colorspace, fracdiff, ggplot2, lmtest,
     magrittr, timeDate, tseries, zoo
 
@@ -187,10 +197,10 @@ Requires: sp
 
 Package: ggplot2
 Source: CRAN
-Version: 2.2.1
-Hash: 46e5cb78836848aa44655e577433f54b
-Requires: MASS, digest, gtable, lazyeval, plyr, reshape2, scales,
-    tibble
+Version: 3.0.0
+Hash: 8332448b76ff31472a1bf6dd31fcddb1
+Requires: MASS, digest, gtable, lazyeval, plyr, reshape2, rlang,
+    scales, tibble, viridisLite, withr
 
 Package: ggridges
 Source: CRAN
@@ -233,7 +243,7 @@ Requires: pkgconfig, rlang
 Package: htmltools
 Source: CRAN
 Version: 0.3.6
-Hash: f6fa1ff1db422a2c5227be30cab6c273
+Hash: bd3273390b4c6499014589c2920f3152
 Requires: Rcpp, digest
 
 Package: htmlwidgets
@@ -245,7 +255,7 @@ Requires: htmltools, jsonlite, yaml
 Package: httpuv
 Source: CRAN
 Version: 1.3.6.2
-Hash: 0e8f7a1514cdcbe96e551b93facda38b
+Hash: b39966474ad60feead816c346b3d8183
 Requires: Rcpp
 
 Package: httr
@@ -296,7 +306,7 @@ Requires: zoo
 Package: lubridate
 Source: CRAN
 Version: 1.7.2
-Hash: fb9f1a7a733f19d2a5f4c5dae5f47ed9
+Hash: 6da6b4d9f45ad010b185947ee4c0467c
 Requires: Rcpp, stringr
 
 Package: magrittr
@@ -333,8 +343,8 @@ Hash: 463550cf44fb6f0a2359368f42eebe62
 
 Package: munsell
 Source: CRAN
-Version: 0.4.3
-Hash: f96d896947fcaf9b6d0074002e9f4f9d
+Version: 0.5.0
+Hash: 247d1c1d72f3072563912ef860758624
 Requires: colorspace
 
 Package: nloptr
@@ -381,7 +391,7 @@ Hash: fb19215402e2d9f1c7f803dcaa806fc2
 Package: plyr
 Source: CRAN
 Version: 1.8.4
-Hash: 02588dd72bf343b964fa2fe450e0cf96
+Hash: d1f100e0dbbf8d3f55aa701b07c62e35
 Requires: Rcpp
 
 Package: png
@@ -408,7 +418,7 @@ Requires: TTR, curl, xts, zoo
 Package: raster
 Source: CRAN
 Version: 2.5-8
-Hash: 6345f5a28f96cc5b0c253683cc34cd58
+Hash: 4f1a7bcf5ae8c9c53224fedada538115
 Requires: Rcpp, sp
 
 Package: rematch
@@ -419,13 +429,13 @@ Hash: ad4faf59e7611117ff165817074c50c7
 Package: reshape2
 Source: CRAN
 Version: 1.4.3
-Hash: d97526fe6578cabf71bb7688c601b4ba
+Hash: f50582f9059ab381cd38dd02697d8a88
 Requires: Rcpp, plyr, stringr
 
 Package: rlang
 Source: CRAN
-Version: 0.2.0
-Hash: 647e2e50a72557d1a770dcd6701e562b
+Version: 0.2.2
+Hash: 49b735b7b1d14f561d21cce12c6703df
 
 Package: rmarkdown
 Source: CRAN
@@ -453,10 +463,9 @@ Hash: e2ebaff8160aff3e6b32e6e78a693c2d
 
 Package: scales
 Source: CRAN
-Version: 0.5.0
-Hash: 671f5636c97d798fd738f04a847900de
-Requires: R6, RColorBrewer, Rcpp, dichromat, labeling, munsell, plyr,
-    viridisLite
+Version: 1.0.0
+Hash: dd78d3c916916877f6d319b27534795e
+Requires: R6, RColorBrewer, Rcpp, labeling, munsell, viridisLite
 
 Package: shiny
 Source: CRAN
@@ -464,6 +473,18 @@ Version: 1.0.5
 Hash: 4d47532a807122bfd6bc3818310f9d2e
 Requires: R6, digest, htmltools, httpuv, jsonlite, mime, sourcetools,
     xtable
+
+Package: shinyWidgets
+Source: CRAN
+Version: 0.4.3
+Hash: a5161a9baf5da9dbf041df853d79f49d
+Requires: htmltools, jsonlite, shiny
+
+Package: shinydashboard
+Source: CRAN
+Version: 0.7.0
+Hash: 5b865adc8fe7461ccc7a257f600112f8
+Requires: htmltools, shiny
 
 Package: shinytest
 Source: github
@@ -486,7 +507,7 @@ Requires: png
 Package: smooth
 Source: CRAN
 Version: 2.4.1
-Hash: 3cffe8812682af45d34fc497a0239fe6
+Hash: 48f4357f91ab2ee77983c85e6411ddf0
 Requires: Rcpp, RcppArmadillo, forecast, nloptr, zoo
 
 Package: sourcetools
@@ -567,13 +588,9 @@ Version: 0.3-2
 Hash: 803d662762e532705c2c066a82d066e7
 
 Package: withr
-Source: github
-Version: 2.1.1.9000
-Hash: b27c9b17ee3efeb723fbfd95a47a7b78
-GithubRepo: withr
-GithubUsername: jimhester
-GithubRef: master
-GithubSha1: 5d0557150e8f6347b4110be53fe17b1668e93b46
+Source: CRAN
+Version: 2.1.2
+Hash: d534108bcd5f34ec73e9eb523751ba20
 
 Package: xtable
 Source: CRAN

@@ -77,7 +77,7 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                       sidebarPanel(
                         radioButtons(inputId = "diagnosticType",
                                      label = "Choose plot type:",
-                                     choiceNames = c("Relative Humidity", "Temperature", "Wind Speed", "1 Hr Fuel Moisture *Currently unreliable*","10 hr Fuel Moisture *Currently unreliable*", "Hourly Precipitation","Growing Season Index"),
+                                     choiceNames = c("Relative Humidity", "Temperature", "Wind Speed", "1 Hr Fuel Moisture","10 hr Fuel Moisture", "Hourly Precipitation","Growing Season Index"),
                                      choiceValues = c("RH","Temp","Wind_Speed","FMC1","FMC10","HourlyPrecip","GSI"),
                                      selected = "RH"),
                         #
@@ -146,8 +146,8 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                         # available for plotting.
                         #
                         
-                        tags$div(class="header", checked = NA,
-                                 tags$h1("Station Summary Plots")),
+                     #   tags$div(class="header", checked = NA,
+                      #           tags$h1("Station Summary Plots")),
                         tabsetPanel(
                           tabPanel("Monthly Plots",
                                    conditionalPanel("input.summaryType == 'RH'",
@@ -208,7 +208,7 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                    # FM1 Slides
                                    
                                    sliderInput(inputId = "FMC1",
-                                               label = "1 Hr Fuel Moisture (%) *Currently unreliable* :",
+                                               label = "1 Hr Fuel Moisture (%):",
                                                min = 0,
                                                max = 30,
                                                value = c(0,30)),
@@ -216,7 +216,7 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                    # FM10 Slides
                                    
                                    sliderInput(inputId = "FMC10",
-                                               label = "10 Hr Fuel Moisture (%) *Currently unreliable*",
+                                               label = "10 Hr Fuel Moisture (%)",
                                                min = 0,
                                                max = 60,
                                                value = c(0,60))
@@ -240,8 +240,8 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                         
                       # Main Panel Ouput
                       
-                      mainPanel(tags$div(class="header", checked = NA,
-                                         tags$h1("Prescription Plots")),
+                      mainPanel(#tags$div(class="header", checked = NA,
+                                      #   tags$h1("Prescription Plots")),
                                 tabsetPanel(
                                   tabPanel("Hours in Prescription",
                                            plotOutput("rh_ts_sub_plot", height = "500px")),

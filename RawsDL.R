@@ -72,48 +72,13 @@ wxStationMetadata <- function(StationID, Network){
 
 fuelMoistureCalc <- function(RH, Temp){
   
-  workingDF <- data.frame("RH" = RH,"Temp" = Temp)
+  workingDF <- data.frame("RH" = RH, "Temp" = ((Temp-32) * 5/9))
   
-  EMC <- function(RH,Temp){
-    EMC_returned <- NULL
-    
-    if(is.na(RH))
-      EMC_returned <- NA
-    if(RH < 10 & !is.na(RH))
-    {EMC_returned <- 0.03229 + 0.281073 * RH - 0.00578 * Temp * RH}
-    if(RH >= 10 & RH < 50  & !is.na(RH))
-      EMC_returned <- 2.22749 + 0.160107 * RH - 0.014784 * Temp
-    if(RH >= 50  & !is.na(RH))
-      EMC_returned <- 21.0606 + 0.005565 * RH^2 - 0.00035 * RH * Temp - 0.483199 * RH
-    
-    return(EMC_returned)
-  }
+  returnFM <- ffm(method = 'anderson',
+              rh = workingDF$RH,
+              temp = workingDF$Temp)
   
-  EMC_Calc <- mapply(FUN = EMC,
-                     RH = workingDF$RH,
-                     Temp = workingDF$Temp,
-                     SIMPLIFY = TRUE)
-  
-  EMC_Calc <- unlist(EMC_Calc)
-  
-  MC1 <- 1.03 * EMC_Calc
-  MC10 <- MC1 * 5 - (4 * EMC_Calc)
-  
-  #
-  # Correct for negative 1-hr fuel moisture
-  #
-  
-  MC1[MC1 <= 0] <- 1
-  
-  #
-  # Correct for negative 10-hr fuel moisture
-  #
-  
-  MC10[MC10 <= 0] <- 1
-  
-  FuelMoistures <- data.frame("MC1" = MC1,"MC10" = MC10)
-  
-  return(FuelMoistures)
+  return(returnFM)
   
 }
 
@@ -217,11 +182,13 @@ fxn_weatherCleaner <- function(weatherDB){
   FMC_calc <- fuelMoistureCalc(RH = newWxDF$RH,
                                Temp = newWxDF$Temp)
   
-  newWxDF$FuelMoisture_1hr <- FMC_calc$MC1
+  newWxDF$FuelMoisture_1hr <- FMC_calc$fm1hr
+  newWxDF$FuelMoisture_litter <- FMC_calc$fmLitter
+  newWxDF$FuelMoisture_100hr <- FMC_calc$fm100hr
   
   if(FMCMissing == TRUE){
     print("Adding calculate 10-hr fuel moisture...", quote = FALSE)
-    newWxDF$FuelMoisture_10hr <- FMC_calc$MC10
+    newWxDF$FuelMoisture_10hr <- FMC_calc$fm10hr
   }
   
   print("Adjusting Time...", quote = FALSE)

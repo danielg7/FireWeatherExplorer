@@ -3,9 +3,9 @@ Author: Dirk Eddelbuettel <edd@debian.org> with contributions by
     Antoine Lucas, Jarek Tuszynski, Henrik Bengtsson, Simon Urbanek,
     Mario Frasca, Bryan Lewis, Murray Stokely, Hannes Muehleisen,
     Duncan Murdoch, Jim Hester, Wush Wu, Qiang Kou, Thierry Onkelinx,
-    Michel Lang, Viliam Simko and Kurt Hornik.
-Version: 0.6.15
-Date: 2018-01-28
+    Michel Lang, Viliam Simko, Kurt Hornik and Radford Neal.
+Version: 0.6.17
+Date: 2018-09-11
 Maintainer: Dirk Eddelbuettel <edd@debian.org>
 Title: Create Compact Hash Digests of R Objects
 Description: Implementation of a function 'digest()' for the creation
@@ -18,17 +18,22 @@ Description: Implementation of a function 'digest()' for the creation
     tested) libraries such as 'OpenSSL' should be used.
 URL: http://dirk.eddelbuettel.com/code/digest.html
 BugReports: https://github.com/eddelbuettel/digest/issues
-Depends: R (>= 2.4.1)
+Depends: R (>= 3.1.0)
 License: GPL (>= 2)
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2018-01-28 16:42:14.094058 UTC; edd
+Packaged: 2018-09-11 11:44:32.856117 UTC; edd
 Repository: CRAN
-Date/Publication: 2018-01-28 21:43:31 UTC
-Built: R 3.4.3; x86_64-apple-darwin15.6.0; 2018-01-29 05:21:06 UTC;
+Date/Publication: 2018-09-12 14:40:03 UTC
+Built: R 3.4.4; x86_64-apple-darwin15.6.0; 2018-09-24 14:44:43 UTC;
     unix
 Archs: digest.so.dSYM
+RemoteType: cran
+RemoteSha: 0.6.17
+RemoteRepos: structure("https://rweb.crmda.ku.edu/cran/", .Names =
+    "CRAN")
+RemotePkgType: mac.binary.el-capitan
 InstallAgent: packrat 0.4.8.1
 InstallSource: CRAN
-Hash: 1f202ebd812ac7192be3739245746a13
+Hash: 6bd8bf6c0430a024a994f2481c2d8516
