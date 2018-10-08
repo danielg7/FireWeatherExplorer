@@ -644,18 +644,25 @@ server <- function(input, output, session) {
         coord_flip()+
         #scale_x_continuous(breaks = seq(1,6,1),
          #                  labels = seq(1,6,1))+
-        scale_fill_distiller("Percent of Hours\nin Prescription", type = "seq",direction = -1,palette = "YlGn")+
+        scale_fill_viridis_c("Percent of Hours\nin Prescription",direction = 1)+
+        
+      #  scale_fill_distiller("Percent of Hours\nin Prescription", type = "seq",direction = -1,palette = "YlGn")+
         xlab("Month") + ylab("Day of Month")+
         scale_y_continuous(breaks =  seq(1,31,1))+
         scale_x_discrete(limits = rev(levels(prescriptionCount$Month)))+
-        guides("Percent of Hours in Prescription", size = guide_legend(ncol = 8))+
-        labs(title = "Percent of Hours That Match Prescription Parameters Per Day / Week of the Year", subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+        guides("Percent of Hours in Prescription",
+               size = guide_legend(ncol = 8),
+               fill = guide_colourbar(title.position="top",
+                                      title.hjust = 0.5,
+                                      barwidth = 10))+
+        labs(title = "Percent of Hours That Match Prescription Parameters Per Day of the Year", subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
         theme_bw(base_size=15, base_family="Avenir")+
         theme(legend.position="bottom",
               legend.direction = "horizontal",
               plot.background = element_blank(),
-              panel.grid = element_blank(),
-              panel.border = element_blank())
+              panel.grid = element_blank()#,
+              #panel.border = element_blank()
+              )
     })
   
     output$prescriptionTable = DT::renderDataTable({
