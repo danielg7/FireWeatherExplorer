@@ -15,9 +15,9 @@ tweaks <-
   list(tags$head(tags$style(HTML("
                                  .multicol { 
                                  height: 150px;
-                                 -webkit-column-count: 3; /* Chrome, Safari, Opera */ 
-                                 -moz-column-count: 3;    /* Firefox */ 
-                                 column-count: 3; 
+                                 -webkit-column-count: 4; /* Chrome, Safari, Opera */ 
+                                 -moz-column-count: 4;    /* Firefox */ 
+                                 column-count: 4; 
                                  -moz-column-fill: balanced;
                                  -column-fill: balanced;
                                  -margin-top: 0px !important;
