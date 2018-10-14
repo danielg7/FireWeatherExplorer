@@ -129,6 +129,7 @@ plot_timeseries_GSI <- ggplot(data = GSIOutput,
                date_breaks = "1 month")+
   scale_y_continuous("Growing Season Index")+
   labs(title = "Growing Season Index and Green Up / Senesence Dates",
+       caption = "N.B. Gaps in rainfall data or incomplete years may create erroneous GSI values.",
        subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
   facet_grid(facets = Year ~ .)+
   theme_bw(base_size=15, base_family="Avenir")
