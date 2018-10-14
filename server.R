@@ -564,8 +564,8 @@ server <- function(input, output, session) {
         scale_fill_continuous("Probability Density", guide = FALSE)+
         geom_count(fill = "red", alpha = .5, pch=21)+
         scale_size_area(name = "Number of Hours In Prescription\nAcross Period of Record",
-                        max_size = 10,
-                        breaks = seq(1,maxRange,1))+
+                        max_size = 10)+#,
+                        #breaks = seq(1,maxRange,1))+
         scale_x_continuous("Months",breaks = seq(1,12,1),
                            labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
                            limits = c(0.5,12.5))+
