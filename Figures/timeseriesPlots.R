@@ -62,7 +62,7 @@ plot_timeseries_fmc1 <- ggplot(data = wx_df,
                date_breaks = "1 month")+
   scale_y_continuous("1 Hour Fuel Moisture (%)",
                      labels = scales::percent,
-                     limits = c(0,1))+
+                     limits = c(0,.5))+
   labs(title = "1 Hr Fuel Moistures (Calculated)",
        subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
   facet_grid(facets = Year ~ .)+
@@ -86,7 +86,7 @@ plot_timeseries_fmc10 <- ggplot(data = wx_df,
                date_breaks = "1 month")+
   scale_y_continuous("10 Hour Fuel Moisture (%)",
                      labels = scales::percent,
-                     limits = c(0,1))+
+                     limits = c(0,.75))+
   labs(title = paste("10 Hr Fuel Moistures (",FMStatement,")", sep = ""),
        subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
   facet_grid(facets = Year ~ .)+
