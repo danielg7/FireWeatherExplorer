@@ -184,7 +184,7 @@ fxn_weatherCleaner <- function(weatherDB){
   
   newWxDF$FuelMoisture_1hr <- FMC_calc$fm1hr
   newWxDF$FuelMoisture_litter <- FMC_calc$fmLitter
-  newWxDF$FuelMoisture_100hr <- FMC_calc$fm100hr
+  newWxDF$FuelMoisture_100hr <- as.numeric(as.character(FMC_calc$fm100hr))
   
   if(FMCMissing == TRUE){
     print("Adding calculate 10-hr fuel moisture...", quote = FALSE)

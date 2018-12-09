@@ -485,7 +485,7 @@ server <- function(input, output, session) {
       filter(Temp >= input$temp[1] & Temp <= input$temp[2]) %>%
       filter(FuelMoisture_1hr >= input$FMC1[1] & FuelMoisture_1hr <= input$FMC1[2]) %>%
       filter(FuelMoisture_10hr >= input$FMC10[1] & FuelMoisture_10hr <= input$FMC10[2]) %>%
-      filter(FuelMoisture_100hr >= input$FMC100[1] & FuelMoisture_100hr <= input$FMC100[2])
+      filter(FuelMoisture_100hr >= input$FMC100[1] & FuelMoisture_100hr <= input$FMC100[2]) %>%
       mutate(Conditions = "In Prescription")
     
     #
@@ -691,16 +691,26 @@ server <- function(input, output, session) {
 
     # Fetch metadata
     
+    print("Selected station:",quote = FALSE)
+    
+    
     print(input$station)
     
     StationID <<- AllRAWS$STATION$STID[which(AllRAWS$STATION$STID == input$station & AllRAWS$STATION$COUNTY == input$County)]
 
     
+    print("Fetching station metadata...",quote = FALSE)
+    
     stationMetadata <<- wxStationMetadata(StationID = StationID)
+    
+    print("Done.",quote = FALSE)
     
     
     
     # Draw the map
+    
+    print("Drawing the map...",quote = FALSE)
+    
 
     output$station_location <- renderLeaflet({
       meta_StationName <- paste("<h4>", stationMetadata$STATION$NAME, " (",stationMetadata$STATION$STID,") </h4>", sep = "")
@@ -716,15 +726,18 @@ server <- function(input, output, session) {
                             sep = "")
       metadata <- HTML(paste(meta_StationName,meta_type, meta_Range, meta_LatLong, meta_GACC, meta_FireWxZone, sep = '<br>'))
       
+      print("Done.",quote = FALSE)
+      
+      
       #print(Stations_In_County)
       
-      if(nrow(Stations_In_County > 1)){
+      if(nrow(Stations_In_County) > 1){
       maxLong <- max(Stations_In_County$Station_Long)
       maxLat <- max(Stations_In_County$Station_Lat)
       minLong <- min(Stations_In_County$Station_Long)
       minLat <- min(Stations_In_County$Station_Lat)}
       
-      if(nrow(Stations_In_County == 1)){
+      if(nrow(Stations_In_County) == 1){
         maxLong <- max(Stations_In_County$Station_Long)+0.25
         maxLat <- max(Stations_In_County$Station_Lat)+.25
         minLong <- min(Stations_In_County$Station_Long)-0.25
