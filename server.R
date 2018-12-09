@@ -485,6 +485,7 @@ server <- function(input, output, session) {
       filter(Temp >= input$temp[1] & Temp <= input$temp[2]) %>%
       filter(FuelMoisture_1hr >= input$FMC1[1] & FuelMoisture_1hr <= input$FMC1[2]) %>%
       filter(FuelMoisture_10hr >= input$FMC10[1] & FuelMoisture_10hr <= input$FMC10[2]) %>%
+      filter(FuelMoisture_100hr >= input$FMC100[1] & FuelMoisture_100hr <= input$FMC100[2])
       mutate(Conditions = "In Prescription")
     
     #

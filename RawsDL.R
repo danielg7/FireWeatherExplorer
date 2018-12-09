@@ -176,7 +176,7 @@ fxn_weatherCleaner <- function(weatherDB){
   newWxDF$RH <- as.numeric(as.character(newWxDF$RH))
   
   #
-  # Calculating 1hr fuel moistures
+  # Calculating fuel moistures fuel moistures
   #
   
   FMC_calc <- fuelMoistureCalc(RH = newWxDF$RH,

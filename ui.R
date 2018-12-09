@@ -219,7 +219,16 @@ navbarPage("Fire Weather Explorer", id = "tabs",
                                                label = "10 Hr Fuel Moisture (%)",
                                                min = 0,
                                                max = 60,
-                                               value = c(0,60))
+                                               value = c(0,60)),
+                                   
+                                   # FM10 Slides
+                                   
+                                   sliderInput(inputId = "FMC100",
+                                               label = "100 Hr Fuel Moisture (%)",
+                                               min = 0,
+                                               max = 40,
+                                               value = c(0,40))
+                                   
                                    ),
                           tabPanel(title = "Wind",tweaks,
                                    # Wind Sliders
