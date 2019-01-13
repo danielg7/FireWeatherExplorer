@@ -1,20 +1,25 @@
 Package: yaml
 Type: Package
 Title: Methods to Convert R Data to YAML and Back
-Version: 2.1.14
-Suggests: testthat
-Date: 2016-11-12
-Author: Jeremy Stephens <jeremy.stephens@vanderbilt.edu>
-Maintainer: Jeremy Stephens <jeremy.stephens@vanderbilt.edu>
+Date: 2018-07-20
+Version: 2.2.0
+Suggests: RUnit
+Author: Jeremy Stephens [aut, cre], Kirill Simonov [aut], Yihui Xie [ctb],
+  Zhuoer Dong [ctb], Hadley Wickham [ctb], Jeffrey Horner [ctb], reikoch [ctb],
+  Will Beasley [ctb], Brendan O'Connor [ctb], Gregory R. Warnes [ctb]
+Maintainer: Jeremy Stephens <jeremy.f.stephens@vumc.org>
 License: BSD_3_clause + file LICENSE
 Description: Implements the 'libyaml' 'YAML' 1.1 parser and emitter
-    (<http://pyyaml.org/wiki/LibYAML>) for R.
+  (<http://pyyaml.org/wiki/LibYAML>) for R.
+URL: https://github.com/viking/r-yaml/
+BugReports: https://github.com/viking/r-yaml/issues
 NeedsCompilation: yes
-Packaged: 2016-11-12 15:41:59 UTC; viking
+Packaged: 2018-07-24 19:09:41 UTC; stephej1
 Repository: CRAN
-Date/Publication: 2016-11-12 19:55:17
-Built: R 3.4.2; x86_64-apple-darwin15.6.0; 2018-03-10 03:04:04 UTC;
-    unix
-InstallAgent: packrat 0.4.8.1
-InstallSource: CRAN
-Hash: c81230c3a7d9ba20607ad6b4331173d1
+Date/Publication: 2018-07-25 15:40:03 UTC
+Built: R 3.4.4; x86_64-apple-darwin15.6.0; 2018-07-26 04:54:35 UTC; unix
+Archs: yaml.so.dSYM
+RemoteType: cran
+RemoteSha: 2.2.0
+RemoteRepos: structure("https://rweb.crmda.ku.edu/cran/", .Names = "CRAN")
+RemotePkgType: mac.binary.el-capitan

@@ -24,12 +24,12 @@
 
 #ifndef ARMA_CRIPPLED_LAPACK
 // value on next line may be changed between #undef and #define by the configure script
-#undef ARMA_CRIPPLED_LAPACK
+#define ARMA_CRIPPLED_LAPACK 1
 #endif
 
 #ifndef ARMA_USE_OPENMP
 // from configure test for OpenMP based on how R is configured, and whether g++ new enough
-#define ARMA_DONT_USE_OPENMP 1
+#define ARMA_USE_OPENMP 1
 #endif
 
 #endif

@@ -347,6 +347,7 @@ Mat<eT>::init_warm(uword in_n_rows, uword in_n_cols)
 //! create the matrix from a textual description
 template<typename eT>
 inline
+arma_cold
 Mat<eT>::Mat(const char* text)
   : n_rows(0)
   , n_cols(0)
@@ -365,6 +366,7 @@ Mat<eT>::Mat(const char* text)
 //! create the matrix from a textual description
 template<typename eT>
 inline
+arma_cold
 Mat<eT>&
 Mat<eT>::operator=(const char* text)
   {
@@ -379,6 +381,7 @@ Mat<eT>::operator=(const char* text)
 //! create the matrix from a textual description
 template<typename eT>
 inline
+arma_cold
 Mat<eT>::Mat(const std::string& text)
   : n_rows(0)
   , n_cols(0)
@@ -397,6 +400,7 @@ Mat<eT>::Mat(const std::string& text)
 //! create the matrix from a textual description
 template<typename eT>
 inline
+arma_cold
 Mat<eT>&
 Mat<eT>::operator=(const std::string& text)
   {
@@ -1220,7 +1224,7 @@ Mat<eT>::Mat(eT* aux_mem, const uword aux_n_rows, const uword aux_n_cols, const 
   {
   arma_extra_debug_sigprint_this(this);
   
-  if(copy_aux_mem == true)
+  if(copy_aux_mem)
     {
     init_cold();
     
@@ -4248,7 +4252,7 @@ Mat<eT>::insert_rows(const uword row_num, const uword N, const bool set_to_zero)
       out.rows(row_num + N, t_n_rows + N - 1) = rows(row_num, t_n_rows-1);
       }
     
-    if(set_to_zero == true)
+    if(set_to_zero)
       {
       out.rows(row_num, row_num + N - 1).zeros();
       }
@@ -4291,7 +4295,7 @@ Mat<eT>::insert_cols(const uword col_num, const uword N, const bool set_to_zero)
       out.cols(col_num + N, t_n_cols + N - 1) = cols(col_num, t_n_cols-1);
       }
     
-    if(set_to_zero == true)
+    if(set_to_zero)
       {
       out.cols(col_num, col_num + N - 1).zeros();
       }
@@ -5836,7 +5840,7 @@ Mat<eT>::in_range(const span& x) const
   {
   arma_extra_debug_sigprint();
   
-  if(x.whole == true)
+  if(x.whole)
     {
     return true;
     }
@@ -5871,7 +5875,7 @@ Mat<eT>::in_range(const span& row_span, const uword in_col) const
   {
   arma_extra_debug_sigprint();
   
-  if(row_span.whole == true)
+  if(row_span.whole)
     {
     return (in_col < n_cols);
     }
@@ -5894,7 +5898,7 @@ Mat<eT>::in_range(const uword in_row, const span& col_span) const
   {
   arma_extra_debug_sigprint();
   
-  if(col_span.whole == true)
+  if(col_span.whole)
     {
     return (in_row < n_rows);
     }
@@ -5926,7 +5930,7 @@ Mat<eT>::in_range(const span& row_span, const span& col_span) const
   const bool rows_ok = row_span.whole ? true : ( (in_row1 <= in_row2) && (in_row2 < n_rows) );
   const bool cols_ok = col_span.whole ? true : ( (in_col1 <= in_col2) && (in_col2 < n_cols) );
   
-  return ( (rows_ok == true) && (cols_ok == true) );
+  return ( rows_ok && cols_ok );
   }
 
 
@@ -6005,6 +6009,7 @@ Mat<eT>::memptr() const
 //! the precision and cell width are modified.
 //! on return, the stream's state are restored to their original values.
 template<typename eT>
+arma_cold
 inline
 void
 Mat<eT>::impl_print(const std::string& extra_text) const
@@ -6030,6 +6035,7 @@ Mat<eT>::impl_print(const std::string& extra_text) const
 //! the precision and cell width are modified.
 //! on return, the stream's state are restored to their original values.
 template<typename eT>
+arma_cold
 inline
 void
 Mat<eT>::impl_print(std::ostream& user_stream, const std::string& extra_text) const
@@ -6055,6 +6061,7 @@ Mat<eT>::impl_print(std::ostream& user_stream, const std::string& extra_text) co
 //! the stream's state are used as is and are not modified
 //! (i.e. the precision and cell width are not modified).
 template<typename eT>
+arma_cold
 inline
 void
 Mat<eT>::impl_raw_print(const std::string& extra_text) const
@@ -6080,6 +6087,7 @@ Mat<eT>::impl_raw_print(const std::string& extra_text) const
 //! the stream's state are used as is and are not modified.
 //! (i.e. the precision and cell width are not modified).
 template<typename eT>
+arma_cold
 inline
 void
 Mat<eT>::impl_raw_print(std::ostream& user_stream, const std::string& extra_text) const

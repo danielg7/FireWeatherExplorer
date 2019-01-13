@@ -62,11 +62,11 @@ class Mat : public Base< eT, Mat<eT> >
   template<typename fill_type> inline Mat(const uword in_rows, const uword in_cols, const fill::fill_class<fill_type>& f);
   template<typename fill_type> inline Mat(const SizeMat& s,                         const fill::fill_class<fill_type>& f);
   
-  inline            Mat(const char*        text);
-  inline Mat& operator=(const char*        text);
+  inline arma_cold            Mat(const char*        text);
+  inline arma_cold Mat& operator=(const char*        text);
   
-  inline            Mat(const std::string& text);
-  inline Mat& operator=(const std::string& text);
+  inline arma_cold            Mat(const std::string& text);
+  inline arma_cold Mat& operator=(const std::string& text);
   
   inline            Mat(const std::vector<eT>& x);
   inline Mat& operator=(const std::vector<eT>& x);
@@ -413,11 +413,11 @@ class Mat : public Base< eT, Mat<eT> >
   arma_inline arma_warn_unused const eT* memptr() const;
   
   
-  inline void impl_print(                           const std::string& extra_text) const;
-  inline void impl_print(std::ostream& user_stream, const std::string& extra_text) const;
+  arma_cold inline void impl_print(                           const std::string& extra_text) const;
+  arma_cold inline void impl_print(std::ostream& user_stream, const std::string& extra_text) const;
   
-  inline void impl_raw_print(                           const std::string& extra_text) const;
-  inline void impl_raw_print(std::ostream& user_stream, const std::string& extra_text) const;
+  arma_cold inline void impl_raw_print(                           const std::string& extra_text) const;
+  arma_cold inline void impl_raw_print(std::ostream& user_stream, const std::string& extra_text) const;
   
   
   template<typename eT2, typename expr>
@@ -773,12 +773,12 @@ class Mat<eT>::fixed : public Mat<eT>
   typedef eT                                elem_type;
   typedef typename get_pod_type<eT>::result pod_type;
   
-  static const bool is_col = (fixed_n_cols == 1) ? true : false;
-  static const bool is_row = (fixed_n_rows == 1) ? true : false;
+  static const bool is_col = (fixed_n_cols == 1);
+  static const bool is_row = (fixed_n_rows == 1);
   
-  static const uword n_rows = fixed_n_rows;
-  static const uword n_cols = fixed_n_cols;
-  static const uword n_elem = fixed_n_elem;
+  static const uword n_rows;  // value provided below the class definition
+  static const uword n_cols;  // value provided below the class definition
+  static const uword n_elem;  // value provided below the class definition
   
   arma_inline fixed();
   arma_inline fixed(const fixed<fixed_n_rows, fixed_n_cols>& X);
@@ -840,6 +840,23 @@ class Mat<eT>::fixed : public Mat<eT>
   inline const Mat<eT>& zeros();
   inline const Mat<eT>& ones();
   };
+
+
+
+// these definitions are outside of the class due to bizarre C++ rules;
+// C++17 has inline variables to address this shortcoming
+
+template<typename eT>
+template<uword fixed_n_rows, uword fixed_n_cols>
+const uword Mat<eT>::fixed<fixed_n_rows, fixed_n_cols>::n_rows = fixed_n_rows;
+
+template<typename eT>
+template<uword fixed_n_rows, uword fixed_n_cols>
+const uword Mat<eT>::fixed<fixed_n_rows, fixed_n_cols>::n_cols = fixed_n_cols;
+
+template<typename eT>
+template<uword fixed_n_rows, uword fixed_n_cols>
+const uword Mat<eT>::fixed<fixed_n_rows, fixed_n_cols>::n_elem = fixed_n_rows * fixed_n_cols;
 
 
 

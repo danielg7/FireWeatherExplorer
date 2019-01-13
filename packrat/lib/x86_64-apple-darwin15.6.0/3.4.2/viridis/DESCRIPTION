@@ -1,7 +1,7 @@
 Package: viridis
 Type: Package
 Title: Default Color Maps from 'matplotlib'
-Version: 0.5.0
+Version: 0.5.1
 Authors@R: c( person("Simon", "Garnier", email = "garnier@njit.edu",
     role = c("aut", "cre")), person("Noam", "Ross", email =
     "noam.ross@gmail.com", role = c("ctb", "cph")), person("Bob",
@@ -24,7 +24,7 @@ Description: Implementation of the 'viridis' - the default -, 'magma',
 License: MIT + file LICENSE
 LazyData: TRUE
 Encoding: UTF-8
-Depends: R (>= 2.10), viridisLite (>= 0.2.0)
+Depends: R (>= 2.10), viridisLite (>= 0.3.0)
 Imports: stats, ggplot2 (>= 1.0.1), gridExtra
 Suggests: hexbin (>= 1.27.0), scales, MASS, knitr, dichromat,
     colorspace, rasterVis, httr, mapproj, vdiffr, svglite (>= 1.2.0),
@@ -34,12 +34,12 @@ URL: https://github.com/sjmgarnier/viridis
 BugReports: https://github.com/sjmgarnier/viridis/issues
 RoxygenNote: 6.0.1
 NeedsCompilation: no
-Packaged: 2018-02-02 14:55:01 UTC; simon
+Packaged: 2018-03-29 14:51:56 UTC; simon
 Author: Simon Garnier [aut, cre], Noam Ross [ctb, cph], Bob Rudis [ctb,
     cph], Marco Sciaini [ctb, cph], Cédric Scherer [ctb, cph]
 Repository: CRAN
-Date/Publication: 2018-02-02 18:21:49 UTC
-Built: R 3.4.3; ; 2018-02-10 05:32:15 UTC; unix
+Date/Publication: 2018-03-29 15:48:56 UTC
+Built: R 3.4.4; ; 2018-03-30 04:30:20 UTC; unix
 InstallAgent: packrat 0.4.8.1
 InstallSource: CRAN
-Hash: 4ea9217fe909e0a52d374e8cf69525a1
+Hash: 39edaec2078b4fc928afb73cc1ce6625

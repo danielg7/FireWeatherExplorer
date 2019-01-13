@@ -51,7 +51,9 @@ $<-,Period-method	hidden_aliases
 %m-%,Period,ANY-method	mplus
 %within%	within-interval
 %within%,ANY,Interval-method	within-interval
+%within%,Date,list-method	within-interval
 %within%,Interval,Interval-method	within-interval
+%within%,POSIXt,list-method	within-interval
 *,ANY,Duration-method	hidden_aliases
 *,ANY,Interval-method	hidden_aliases
 *,ANY,Period	hidden_aliases
@@ -245,6 +247,7 @@ as.period,logical-method	as.period
 as.period,numeric-method	as.period
 as.period,Period-method	as.period
 as_date	as_date
+as_date,ANY-method	as_date
 as_date,character-method	as_date
 as_date,numeric-method	as_date
 as_date,POSIXt-method	as_date

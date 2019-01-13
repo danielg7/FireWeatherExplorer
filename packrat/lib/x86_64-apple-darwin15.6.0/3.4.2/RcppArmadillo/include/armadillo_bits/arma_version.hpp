@@ -19,10 +19,10 @@
 
 
 
-#define ARMA_VERSION_MAJOR 8
-#define ARMA_VERSION_MINOR 400
-#define ARMA_VERSION_PATCH 0
-#define ARMA_VERSION_NAME  "Entropy Bandit"
+#define ARMA_VERSION_MAJOR 9
+#define ARMA_VERSION_MINOR 200
+#define ARMA_VERSION_PATCH 5
+#define ARMA_VERSION_NAME  "Carpe Noctem"
 
 
 

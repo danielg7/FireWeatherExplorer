@@ -3,9 +3,125 @@
 \newcommand{\ghpr}{\href{https://github.com/RcppCore/RcppArmadillo/pull/#1}{##1}}
 \newcommand{\ghit}{\href{https://github.com/RcppCore/RcppArmadillo/issues/#1}{##1}}
 
+\section{Changes in RcppArmadillo version 0.9.200.5.0 (2018-11-09)}{
+  \itemize{
+    \item Upgraded to Armadillo release 9.200.5 (Carpe Noctem)
+  }
+}
+
+\section{Changes in RcppArmadillo version 0.9.200.4.0 (2018-11-09)}{
+  \itemize{
+    \item Upgraded to Armadillo release 9.200.4 (Carpe Noctem)
+    \itemize{
+      \item faster handling of symmetric positive definite matrices by
+      \code{rcond()}
+      \item faster transpose of matrices with size ≥ 512x512
+      \item faster handling of compound sparse matrix expressions by
+      \code{accu()},  \code{diagmat()}, \code{trace()}
+      \item faster handling of sparse matrices by \code{join_rows()}
+      \item expanded \code{sign()} to handle scalar arguments
+      \item expanded operators (\code{*}, \code{\%}, \code{+}, \code{−})
+      to handle sparse matrices with differing element types
+      (eg. multiplication of complex matrix by real matrix) 
+      \item expanded \code{conv_to()} to allow conversion between sparse
+      matrices with differing element types 
+      \item expanded \code{solve()} to optionally allow keeping
+      solutions of systems singular to working precision
+      \item workaround for \code{gcc} and \code{clang} bug in C++17 mode
+    }
+    \item Commented-out sparse matrix test consistently failing on the
+    fedora-clang machine CRAN, and only there. No fix without access.
+    \item The 'Unit test' vignette is no longer included.
+  }
+}
+
+\section{Changes in RcppArmadillo version 0.9.100.5.0 (2018-08-16)}{
+  \itemize{
+    \item Upgraded to Armadillo release 9.100.4 (Armatus Ad Infinitum)
+    \itemize{
+      \item faster handling of symmetric/hermitian positive definite
+      matrices by \code{solve()} 
+      \item faster handling of \code{inv_sympd()} in compound expressions
+      \item added \code{.is_symmetric()}
+      \item added \code{.is_hermitian()}
+      \item expanded \code{spsolve()} to optionally allow keeping
+      solutions of systems singular to working precision 
+      \item new configuration options \code{ARMA_OPTIMISE_SOLVE_BAND}
+      and \code{ARMA_OPTIMISE_SOLVE_SYMPD}
+      smarter use of the element cache in sparse matrices
+      \item smarter use of the element cache in sparse matrices
+    }
+    \item Aligned OpenMP flags in the RcppArmadillo.package.skeleton
+    used Makevars{,.win} to not use one C and C++ flag.
+  }
+}
+
+\section{Changes in RcppArmadillo version 0.8.600.0.0 (2018-06-28)}{
+  \itemize{
+    \item Upgraded to Armadillo release 8.600.0 (Sabretooth Rugrat)
+    \itemize{
+      \item added \code{hess()} for Hessenberg decomposition
+      \item added \code{.row()}, \code{.rows()}, \code{.col()},
+      \code{.cols()} to subcube views 
+      \item expanded \code{.shed_rows()} and \code{.shed_cols()} to
+      handle cubes 
+      \item expanded \code{.insert_rows()} and \code{.insert_cols()} to
+      handle cubes 
+      \item expanded subcube views to allow non-contiguous access to
+      slices 
+      \item improved tuning of sparse matrix element access operators
+      \item faster handling of tridiagonal matrices by \code{solve()}
+      \item faster multiplication of matrices with differing element
+      types when using OpenMP 
+    }
+  }
+}
+
+\section{Changes in RcppArmadillo version 0.8.500.1.1 (2018-05-17) [GH only]}{
+  \itemize{
+    \item Upgraded to Armadillo release 8.500.1 (Caffeine Raider)
+    \itemize{
+      \item bug fix for banded matricex
+    }
+    \item Added \code{slam} to Suggests: as it is used in two unit test
+    functions [CRAN requests]
+    \item The \code{RcppArmadillo.package.skeleton()} function now works
+    with \code{example_code=FALSE} when \CRANpkg{pkgKitten} is present
+    (Santiago Olivella in \ghpr{231} fixing \ghpr{229})
+    \item The LAPACK tests now cover band matrix solvers (Keith O'Hara
+    in \ghpr{230}).
+  }
+}
+
+\section{Changes in RcppArmadillo version 0.8.500.0 (2018-04-21)}{
+  \itemize{
+    \item Upgraded to Armadillo release 8.500 (Caffeine Raider)
+    \itemize{
+      \item faster handling of sparse matrices by \code{kron()} and \code{repmat()}
+      \item faster transpose of sparse matrices
+      \item faster element access in sparse matrices
+      \item faster row iterators for sparse matrices
+      \item faster handling of compound expressions by \code{trace()}
+      \item more efficient handling of aliasing in submatrix views
+      \item expanded \code{normalise()} to handle sparse matrices
+      \item expanded \code{.transform()} and \code{.for_each()} to handle sparse matrices
+      \item added \code{reverse()} for reversing order of elements
+      \item added \code{repelem()} for replicating elements
+      \item added \code{roots()} for finding the roots of a polynomial
+    }
+    \item Fewer LAPACK compile-time guards are used, new unit tests for underlying
+    features have been added (Keith O'Hara in \ghpr{211} addressing \ghit{207}).
+    \item The configure check for LAPACK features has been updated
+    accordingly (Keith O'Hara in \ghpr{214} addressing \ghit{213}).
+    \item The compile-time check for \code{g++} is now more robust to
+    minimal shell versions (\ghpr{217} addressing \ghit{216}).
+    \item Compiler tests to were added for macOS (Keith O'Hara in \ghpr{219}).
+  }
+}
+
 \section{Changes in RcppArmadillo version 0.8.400.0.0 (2018-02-19)}{
   \itemize{
-    \item Upgraded to Armadillo release 8.400.rc2 (Entropy Bandit)
+    \item Upgraded to Armadillo release 8.400.0 (Entropy Bandit)
     \itemize{
       \item faster handling of sparse matrices by \code{repmat()}
       \item faster loading of CSV files
