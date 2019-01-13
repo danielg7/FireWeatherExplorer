@@ -8,6 +8,21 @@
 library("mesowest")
 library("lubridate")
 
+# Create logging function
+
+logger <- function(textToLog, logFile){
+  
+  if(!file.exists(logFile)){
+    warning(paste(logFile," does not exist. Creating...", sep = ""))
+    file(logFile)
+    }
+  
+  print(textToLog, quote = FALSE)
+  
+  cat(textToLog, file = logFile, append = TRUE)
+  
+}
+
 # Read in API Key for Mesowest --------------------------------------------
 
 fileName <- 'api_key.txt'
@@ -153,7 +168,7 @@ fxn_weatherCleaner <- function(weatherDB){
   
   if(!"fuel_moisture_set_1" %in% names(weatherDB$STATION$OBSERVATIONS) & !"solar_radiation_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
     
-    print("No fuel moisture in this dataset!")
+    print("No fuel moisture in this dataset!", quote = FALSE)
     FMCMissing <<- TRUE
     
     newWxDF <- data.frame("Date_Time" = weatherDB$STATION$OBSERVATIONS$date_time[[1]],
@@ -187,7 +202,7 @@ fxn_weatherCleaner <- function(weatherDB){
   newWxDF$FuelMoisture_100hr <- as.numeric(as.character(FMC_calc$fm100hr))
   
   if(FMCMissing == TRUE){
-    print("Adding calculate 10-hr fuel moisture...", quote = FALSE)
+    print("Adding calculated 10-hr fuel moisture...", quote = FALSE)
     newWxDF$FuelMoisture_10hr <- FMC_calc$fm10hr
   }
   
@@ -217,6 +232,9 @@ fxn_weatherCleaner <- function(weatherDB){
       mutate(HourlyRainfall = PrecipAccumulation - lag(PrecipAccumulation, default=first(PrecipAccumulation))) %>%
       ungroup()
     
+    print("Done.", quote = FALSE)
+    
+    
     # newWxDF[newWxDF$HourlyRainfall < 0,]$HourlyRainfall <- NA
     newWxDF$HourlyRainfall <- ifelse(!is.na(newWxDF$HourlyRainfall) & newWxDF$HourlyRainfall < 0, NA, newWxDF$HourlyRainfall)
     
@@ -226,7 +244,7 @@ fxn_weatherCleaner <- function(weatherDB){
       ungroup()
   }
   
-  print("Done.", quote = FALSE)
+  print("Done cleaning weather.", quote = FALSE)
   return(newWxDF)
   
 }
@@ -235,17 +253,38 @@ fxn_weatherCleaner <- function(weatherDB){
 
 calcGSI <- function(DateTime, Temp, RH, Latitude)
 {
+  
+  print("Starting GSI calculation...", quote = FALSE)
+  
+  print("Adjusting dataframe...", quote = FALSE)
+  
+  
   originalDF <- data.frame(DateTime,Temp,RH)
   
   workingDF <- data.frame(DateTime,Temp,RH)
+  
+
+  
+  
+  
   workingDF$Year <- lubridate::year(DateTime)
   workingDF$Yday <- lubridate::yday(x = workingDF$DateTime)
   workingDF$DayOfYear <- as.Date(paste("2000-",format(workingDF$DateTime, "%j")), "%Y-%j")
+  
+  print("Done.", quote = FALSE)
+  
+  print("Calculating day length...", quote = FALSE)
+  
   workingDF$DayLength <- geosphere::daylength(lat = Latitude,
                                               doy = workingDF$Yday)
   
+  print("Done.", quote = FALSE)
+  
+  print("Subsetting by only 1300 daily weather reading...", quote = FALSE)
+  
   workingDF <- filter(workingDF, hour(DateTime) == 13)
   
+  print("Done.", quote = FALSE)
   
   get.es <- function(temp){
     TempC <- (temp - 32) / 1.8
@@ -262,8 +301,12 @@ calcGSI <- function(DateTime, Temp, RH, Latitude)
     return(vpd)
   }
   
+  print("Calculating VPD...", quote = FALSE)
+  
   workingDF$VPD <- get.vpd(rh = workingDF$RH,
                            temp = workingDF$Temp)
+  
+  print("Done.", quote = FALSE)
   
   iGSI_hourly <- function(MinimumTemp, VPD, Photoperiod){
     
@@ -306,29 +349,62 @@ calcGSI <- function(DateTime, Temp, RH, Latitude)
     return(iGSI)
   }
   
+  print("Calculating daily temp minima, VPD max, and daylength...", quote = FALSE)
+  
   workingDF_daily <- workingDF %>%
     group_by(Year,Yday) %>%
     summarise(Tmin = min(Temp, na.rm = TRUE), VPD = max(VPD, na.rm = TRUE), DayLength = max(DayLength), na.rm = TRUE) %>%
     ungroup()
   
+  print("Done.", quote = FALSE)
+  
+  print("Calculating GSI...", quote = FALSE)
+  
   workingDF_daily$GSI <- mapply(iGSI_hourly, workingDF_daily$Tmin, workingDF_daily$VPD, workingDF_daily$DayLength)
+  
+  print("Done.", quote = FALSE)
+  
+  print("Identifying GSI maxima...", quote = FALSE)
   
   workingDF_daily <- workingDF_daily %>%
     group_by(Year,Yday) %>%
     mutate(maxGSI = max(GSI, na.rm = TRUE))# %>% ungroup()
+  
+  print("Done.", quote = FALSE)
+  
+  print("Calculating rolling GSI...", quote = FALSE)
   
   workingDF_daily$rollGSI <- rollapply(data = workingDF_daily$maxGSI,  # original series
                                        width = 21,  # width of the rolling window
                                        FUN = mean, na.rm = T,  # Any arbitrary function
                                        fill = NA)
   
+  print("Done.", quote = FALSE)
+  
+  print("Munging data and return...", quote = FALSE)
+  
   workingDF_daily$Yday <- as.Date(workingDF_daily$Yday, format = "%j", origin=paste0("1.1.",workingDF_daily$Year))
+  
+  print("GSI calculations complete.", quote = FALSE)
+  
   return(workingDF_daily)
+  
   
 }
 
 findGreenupDates <- function(Year, Yday,rollGSI){
-  workingDF <- data.frame(Year, Yday,rollGSI)
+  print("Starting green up date calculations...", quote = FALSE)
+  
+  print("Making working dataframe...", quote = FALSE)
+  
+  workingDF <- data.frame(Year, Yday, rollGSI)
+  
+  print(head(workingDF), quote = FALSE)
+  
+  print("Done.", quote = FALSE)
+  
+  print("Calculating greenup...", quote = FALSE)
+  
   
   greenup <- workingDF %>%
     group_by(Year) %>%
@@ -338,6 +414,11 @@ findGreenupDates <- function(Year, Yday,rollGSI){
     group_by(Year) %>%
     summarise(GreenUpDate = min(Yday))
   
+  print("Done.", quote = FALSE)
+  
+  print("Calculating senesence...", quote = FALSE)
+  
+  
   senesence <- workingDF %>%
     group_by(Year) %>%
     filter(rollGSI >= 0.5) %>%
@@ -346,10 +427,22 @@ findGreenupDates <- function(Year, Yday,rollGSI){
     group_by(Year) %>%
     summarise(SenesenceDate = max(Yday))
   
+  print("Done.", quote = FALSE)
+  
+  print("Merging growing season datasets...", quote = FALSE)
+  
   growingSeason <- merge(greenup,senesence,by = "Year")
+  
+  print("Done.", quote = FALSE)
+  
+  print("Forcing date calculations...", quote = FALSE)
+  
   
   growingSeason$GreenUpDate <- as.Date(growingSeason$GreenUpDate, format = "%j", origin=paste0("1.1.",growingSeason$Year))
   growingSeason$SenesenceDate <- as.Date(growingSeason$SenesenceDate, format = "%j", origin=paste0("1.1.",growingSeason$Year))
+  
+  print("Done. Green up dates returning...", quote = FALSE)
+  
   
   return(growingSeason)
 }
