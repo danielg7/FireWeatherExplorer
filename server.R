@@ -14,12 +14,104 @@ library("DT")
 library("leaflet")
 library("hms")
 library("testthat")
-library("highcharter")
+#library("highcharter")
 
 source("./global.R")
 
 
 server <- function(input, output, session) {
+  #
+  # Create reactives
+  #
+  
+  wxSubsetByConditions <- reactive({
+    
+    # if(input$pickStations){
+    
+    
+    
+    #
+    # Filter based on month and hour to make the "prescribed burn window" (wx_Context)
+    #
+    
+    print("Subsetting data based on filters.", quote = FALSE)
+    
+    
+    wx_Context <- wx_df %>%
+      filter(Month >= input$months[1]) %>%
+      filter(Month <= input$months[2]) %>%
+      filter(Hour >= input$hours[1] & Hour <= input$hours[2]) %>%
+      mutate(Conditions = "Window")
+    
+    print("Done.", quote = FALSE)
+    
+    
+    #
+    # Filter the "prescribed burn window" (wx_Context) based on fire weather variables
+    # This will determine prescription areas.
+    #
+    
+    print("Filtering further based on the window...", quote = FALSE)
+    
+    
+    wx_Rx <- wx_Context %>%
+      filter(RH >= input$rh[1] & RH <= input$rh[2]) %>%
+      filter(Wind_Direction %in% input$wind_directions) %>%
+      filter(Wind_Speed >= input$wind[1] & Wind_Speed <= input$wind[2]) %>%
+      filter(Temp >= input$temp[1] & Temp <= input$temp[2]) %>%
+      filter(FuelMoisture_1hr >= input$FMC1[1] & FuelMoisture_1hr <= input$FMC1[2]) %>%
+      filter(FuelMoisture_10hr >= input$FMC10[1] & FuelMoisture_10hr <= input$FMC10[2]) %>%
+      filter(FuelMoisture_100hr >= input$FMC100[1] & FuelMoisture_100hr <= input$FMC100[2]) %>%
+      mutate(Conditions = "In Prescription")
+    
+    print("Done.", quote = FALSE)
+    
+    
+    #
+    # Combine dataframe of values in the 
+    # This will determine prescription areas.
+    #
+    
+    wx_Context <- wx_Context[,c("DateTime","Conditions")]
+    wx_Rx <- wx_Rx[,c("DateTime","Conditions")]
+    wx_Both <- rbind(wx_Rx,wx_Context)
+    wx_Both$Conditions <- as.character(wx_Both$Conditions)
+    
+    
+    combinedWx <<- merge(wx_df,wx_Both, by = "DateTime", all.x = TRUE)
+    
+    
+    combinedWx$Conditions[which(!combinedWx$Conditions %in% c("In Prescription","Window"))] <<- "Not Matching"
+    
+    combinedWx$Conditions <<- as.factor(combinedWx$Conditions)
+    
+    combinedWx$DayOfYear <<- as.Date(paste("2000-",format(combinedWx$DateTime, "%j")), "%Y-%j")
+    
+    combinedWx$hms <<- as.POSIXct(format(combinedWx$DateTime, format = "%H:%M:%S"), format = "%H:%M:%S")
+    
+    combinedWx$Year <<- year(combinedWx$DateTime)
+    
+    
+    combinedWx
+  })
+  
+  wx_sub_test <- reactive({
+    wxSubsetByConditions() %>%
+      mutate(Month = as.factor(Month)) %>%
+      #mutate(Month = factor(Month,levels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"))) %>%
+      mutate(Yday = yday(DateTime)) %>%
+      mutate(weekday = wday(DateTime)) %>%
+      mutate(weekdayf = weekdays(DateTime, abbreviate = TRUE)) %>%
+      mutate(week = as.numeric(format(DateTime,"%W"))) %>%
+      group_by(Month) %>%
+      mutate(monthweek = 1 + week - min(week)) %>%
+      ungroup() %>%
+      count(Day, Month, Conditions) %>%
+      group_by(Day) %>%
+      mutate(Percent = n / sum(n)) %>%
+      filter(Conditions %in% c("In Prescription","Window")) %>%
+      ungroup()
+  })
   
   # Draw the map
   
@@ -56,6 +148,7 @@ server <- function(input, output, session) {
       #
       # Once the 'state' input changes, add stations to the list by pulling them from the station list relative to the first county
       #
+      
       County_List <- sort(as.character(unique(AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$STATE == input$State)])))
       
       Station_ID <- AllRAWS$STATION$STID[which(AllRAWS$STATION$STATE == input$State & AllRAWS$STATION$COUNTY == County_List[1])]
@@ -242,12 +335,12 @@ server <- function(input, output, session) {
         incProgress(amount = .15,
                     message = "Done!")
         
-        wxSubsetByConditions()
+        #wxSubsetByConditions()
         
         source("Figures/timeseriesPlots.R")
         source("Figures/monthlyPlots.R")
         source("Figures/hourlyPlots.R")
-        source("Figures/prescriptionPlots.R")
+        #source("Figures/prescriptionPlots.R")
         
       })
     })
@@ -468,7 +561,7 @@ server <- function(input, output, session) {
     updateTabsetPanel(session = session, inputId =  "tabs",
                       selected = "Diagnostic")
     
-    wxSubsetByConditions()
+    #wxSubsetByConditions()
     
   })
   
@@ -478,103 +571,18 @@ server <- function(input, output, session) {
   # Clean Data Based on Prescription
   #
   
-  wxSubsetByConditions <- reactive({
-    
-    if(input$pickStations){
-      
-      
-      
-      #
-      # Filter based on month and hour to make the "prescribed burn window" (wx_Context)
-      #
-      
-      print("Subsetting data based on filters.", quote = FALSE)
-      
-      
-      wx_Context <- wx_df %>%
-        filter(Month >= input$months[1]) %>%
-        filter(Month <= input$months[2]) %>%
-        filter(Hour >= input$hours[1] & Hour <= input$hours[2]) %>%
-        mutate(Conditions = "Window")
-      
-      print("Done.", quote = FALSE)
-      
-      
-      #
-      # Filter the "prescribed burn window" (wx_Context) based on fire weather variables
-      # This will determine prescription areas.
-      #
-      
-      print("Filtering further based on the window...", quote = FALSE)
-      
-      
-      wx_Rx <- wx_Context %>%
-        filter(RH >= input$rh[1] & RH <= input$rh[2]) %>%
-        filter(Wind_Direction %in% input$wind_directions) %>%
-        filter(Wind_Speed >= input$wind[1] & Wind_Speed <= input$wind[2]) %>%
-        filter(Temp >= input$temp[1] & Temp <= input$temp[2]) %>%
-        filter(FuelMoisture_1hr >= input$FMC1[1] & FuelMoisture_1hr <= input$FMC1[2]) %>%
-        filter(FuelMoisture_10hr >= input$FMC10[1] & FuelMoisture_10hr <= input$FMC10[2]) %>%
-        filter(FuelMoisture_100hr >= input$FMC100[1] & FuelMoisture_100hr <= input$FMC100[2]) %>%
-        mutate(Conditions = "In Prescription")
-      
-      print("Done.", quote = FALSE)
-      
-      
-      #
-      # Combine dataframe of values in the 
-      # This will determine prescription areas.
-      #
-      
-      wx_Context <- wx_Context[,c("DateTime","Conditions")]
-      wx_Rx <- wx_Rx[,c("DateTime","Conditions")]
-      wx_Both <- rbind(wx_Rx,wx_Context)
-      wx_Both$Conditions <- as.character(wx_Both$Conditions)
-      
-      
-      combinedWx <<- merge(wx_df,wx_Both, by = "DateTime", all.x = TRUE)
-      
-      
-      combinedWx$Conditions[which(!combinedWx$Conditions %in% c("In Prescription","Window"))] <<- "Not Matching"
-      
-      combinedWx$Conditions <<- as.factor(combinedWx$Conditions)
-      
-      combinedWx$DayOfYear <<- as.Date(paste("2000-",format(combinedWx$DateTime, "%j")), "%Y-%j")
-      
-      combinedWx$hms <<- as.POSIXct(format(combinedWx$DateTime, format = "%H:%M:%S"), format = "%H:%M:%S")
-      
-      combinedWx$Year <<- year(combinedWx$DateTime)
-      
-      wx_sub_countHours <<- combinedWx %>%
-        count(Month, Conditions) %>%
-        group_by(Month) %>%
-        mutate(Percent = n / sum(n))
-      
-      
-      
-    } 
-    else{
-      return(NULL)
-    }
-  })
+  
   
   output$rh_ts_sub_plot <- renderPlot({
     validate(
       need(input$pickStations, 'Please select a station!')
     )
     
+    dataToUse <- wxSubsetByConditions()
     
-    wxSubsetByConditions()
+    #print(head(dataToUse))
     
-    
-    
-  #  lims_dt <- as.POSIXct(strptime(c(min(filter(combinedWx, Conditions %in% "Not Matching")$hms),
-   #                                  max(filter(combinedWx, Conditions %in% "Not Matching")$hms)),
-    #                               format = "%Y-%m-%d %H:%M"))
-    #lims_d <- as.Date(c(min(wx_df$DayOfYear),
-     #                   max(wx_df$DayOfYear)))
-    
-    countRange <- combinedWx %>%
+    countRange <- dataToUse %>%
       filter(Conditions %in% "In Prescription") %>%
       group_by(Month, Hour) %>%
       summarise(Count = n())
@@ -587,8 +595,42 @@ server <- function(input, output, session) {
     
     # Output the plot as defined in Figures/prescriptionPlots.R
     
-    plot_rx_month_by_hour
+   # plot_rx_month_by_hour
     
+    print("Plotting rx month by hour...", quote = FALSE)
+    
+    #print(head(combinedWx), quote = TRUE)
+    
+
+    
+    plot_rx_month_by_hour <- ggplot(data = filter(dataToUse, Conditions %in% "In Prescription"), aes(x = Month, y = Hour))+
+      annotate("rect",
+               xmin = min(filter(dataToUse, Conditions %in% "Window")$Month),
+               xmax = max(filter(dataToUse, Conditions %in% "Window")$Month),
+               ymin = min(filter(dataToUse, Conditions %in% "Window")$Hour),
+               ymax = max(filter(dataToUse, Conditions %in% "Window")$Hour),
+               alpha = .2, color = "green")+
+      stat_density_2d(aes(fill = ..level..),
+                      geom = "polygon", alpha = 0.1)+
+      scale_fill_continuous("Probability Density", guide = FALSE)+
+      geom_count(fill = "red", alpha = .5, pch=21)+
+      scale_size_area(name = "Number of Hours In Prescription\nAcross Period of Record",
+                      max_size = 10)+
+      scale_x_continuous("Months",breaks = seq(1,12,1),
+                         labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
+                         limits = c(0.5,12.5))+
+      scale_y_continuous("Hour of the Day", breaks = seq(0,23,1),
+                         limits = c(0,23),
+                         labels = c("0000","0100","0200","0300","0400","0500","0600","0700","0800","0900","1000","1100",
+                                    "1200","1300","1400","1500","1600","1700","1800","1900","2000","2100","2200",
+                                    "2300"))+
+      guides(size = guide_legend(ncol = 8))+
+      theme_bw(base_size=15, base_family="Avenir")+
+      theme(legend.position="bottom",
+            legend.direction = "vertical")+
+      labs(title = "Hours That Match Prescription Parameters", subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))
+    
+    plot_rx_month_by_hour
   })
   
   output$rhplot <- renderPlot({
@@ -596,53 +638,81 @@ server <- function(input, output, session) {
       need(input$pickStations, 'Please select a station!')
     )
     
-    wxSubsetByConditions()
+    #wxSubsetByConditions()
     
     # Output the plot as defined in Figures/prescriptionPlots.R
     
-    plot_rx_histogram_by_month
+    wx_sub_countHours <<- wxSubsetByConditions() %>%
+      count(Month, Conditions) %>%
+      group_by(Month) %>%
+      mutate(Percent = n / sum(n))
     
+    plot_rx_histogram_by_month <- ggplot(data = filter(wx_sub_countHours, Conditions == "In Prescription"),
+                                         aes(x = Month, y = Percent, fill = Conditions))+
+      scale_y_continuous("Percent of Hours Matching Conditions (by month)",
+                         labels = scales::percent)+
+      geom_bar(color = "black", width = 1, stat = "identity", position="dodge")+
+      scale_x_continuous(breaks = seq(1,12,1),
+                         labels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),
+                         limits = c(0.5,12.5))+
+      theme_bw(base_size=15, base_family="Avenir")+
+      labs(title = "Percent of Hours That Match Prescription Parameters Per Month", subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+      theme(legend.position="none")
+    
+    plot_rx_histogram_by_month
   })
+  
+
   
   output$calendarPlot <- renderPlot({
     validate(
       need(input$pickStations, 'Please select a station!')
     )
     
-    wxSubsetByConditions()
+    #wxSubsetByConditions()
     
     #print("Calculating ")
     
-    wx_sub_test <- combinedWx %>%
-      mutate(Month = as.factor(Month)) %>%
-      #mutate(Month = factor(Month,levels = c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"))) %>%
-      mutate(Yday = yday(DateTime)) %>%
-      mutate(weekday = wday(DateTime)) %>%
-      mutate(weekdayf = weekdays(DateTime, abbreviate = TRUE)) %>%
-      mutate(week = as.numeric(format(DateTime,"%W"))) %>%
-      group_by(Month) %>%
-      mutate(monthweek = 1 + week - min(week)) %>%
-      ungroup() %>%
-      count(Day, Month, Conditions) %>%
-      group_by(Day) %>%
-      mutate(Percent = n / sum(n)) %>%
-      filter(Conditions %in% c("In Prescription","Window")) %>%
-      ungroup()
+   
     
-    print(levels(wx_sub_test$Month))
-    levels(wx_sub_test$Month) <- c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC")
+    #print(levels(wx_sub_test$Month))
+    #levels(wx_sub_test$Month) <- c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC")
     #wx_sub_test$weekdayf <- as.factor(wx_sub_test$weekdayf)
     #wx_sub_test$weekdayf <- factor(x = wx_sub_test$weekdayf, levels = rev(c("Mon","Tue","Wed","Thu","Fri","Sat","Sun")))
     
-    windowCount <- wx_sub_test %>%
-      filter(Conditions == "Window")
-    prescriptionCount <- wx_sub_test %>%
-      filter(Conditions == "In Prescription")
+
     
     # Output the plot as defined in Figures/prescriptionPlots.R
     
-    plot_rx_percent_hours_by_month
+    windowCount <- wx_sub_test() %>%
+      filter(Conditions == "Window")
     
+    prescriptionCount <- wx_sub_test() %>%
+      filter(Conditions == "In Prescription")
+    
+    plot_rx_percent_hours_by_month <- ggplot(prescriptionCount, aes(x = Month, y = Day, fill = Percent*100)) + 
+      geom_tile(fill = "gray", data = windowCount, aes(Month, Day), size = 0.25, colour = "white")+
+      geom_tile(colour="white", size = 0.25) + 
+      # facet_grid(. ~ Month)+
+ #     coord_fixed()+
+      coord_flip()+
+      scale_fill_viridis_c("Percent of Hours\nin Prescription",direction = 1)+
+      xlab("Month") + ylab("Day of Month")+
+      scale_y_continuous(breaks =  seq(1,31,1))+
+      scale_x_discrete(limits = rev(levels(prescriptionCount$Month)))+
+      guides("Percent of Hours in Prescription",
+             size = guide_legend(ncol = 8),
+             fill = guide_colourbar(title.position="top",
+                                    title.hjust = 0.5,
+                                    barwidth = 10))+
+      labs(title = "Percent of Hours That Match Prescription Parameters Per Day of the Year", subtitle = paste(stationMetadata$STATION$NAME,": ",min(wx_df$Year)," - ",max(wx_df$Year),sep = ""))+
+      theme_bw(base_size=15, base_family="Avenir")+
+      theme(legend.position="bottom",
+            legend.direction = "horizontal",
+            plot.background = element_blank(),
+            panel.grid = element_blank())#,
+    #panel.border = element_blank()
+    plot_rx_percent_hours_by_month
   })
   
   output$prescriptionTable = DT::renderDataTable({
@@ -650,9 +720,9 @@ server <- function(input, output, session) {
       need(input$pickStations, 'Please select a station!')
     )
     
-    wxSubsetByConditions()
+    #wxSubsetByConditions()
     
-    output <- combinedWx %>%
+    output <- wxSubsetByConditions() %>%
       filter(Conditions %in% "In Prescription") %>%
       select(-one_of(c("DayOfYear","Conditions","hms","Hour","Month","Year"))) %>%
       select(DateTime, Temp, RH, Wind_Speed, Wind_Direction, FuelMoisture_10hr, FuelMoisture_1hr) %>%
