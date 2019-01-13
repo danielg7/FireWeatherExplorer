@@ -2,15 +2,16 @@
 
 print("Plotting rx month by hour...", quote = FALSE)
 
-print(head(combinedWx), quote = TRUE)
+#print(head(combinedWx), quote = TRUE)
 
+#print(head(wxSubsetByConditions()))
 
-plot_rx_month_by_hour <- ggplot(data = filter(combinedWx, Conditions %in% "In Prescription"), aes(x = Month, y = Hour))+
+plot_rx_month_by_hour <- ggplot(data = filter(wxSubsetByConditions(), Conditions %in% "In Prescription"), aes(x = Month, y = Hour))+
   annotate("rect",
-           xmin = min(filter(combinedWx, Conditions %in% "Window")$Month),
-           xmax = max(filter(combinedWx, Conditions %in% "Window")$Month),
-           ymin = min(filter(combinedWx, Conditions %in% "Window")$Hour),
-           ymax = max(filter(combinedWx, Conditions %in% "Window")$Hour),
+           xmin = min(filter(wxSubsetByConditions(), Conditions %in% "Window")$Month),
+           xmax = max(filter(wxSubsetByConditions(), Conditions %in% "Window")$Month),
+           ymin = min(filter(wxSubsetByConditions(), Conditions %in% "Window")$Hour),
+           ymax = max(filter(wxSubsetByConditions(), Conditions %in% "Window")$Hour),
            alpha = .2, color = "green")+
   stat_density_2d(aes(fill = ..level..),
                   geom = "polygon", alpha = 0.1)+
@@ -38,6 +39,11 @@ print("Done.", quote = TRUE)
 
 # Prescription Plog - Histogram by Month ----------------------------------
 
+wx_sub_countHours <<- wxSubsetByConditions() %>%
+  count(Month, Conditions) %>%
+  group_by(Month) %>%
+  mutate(Percent = n / sum(n))
+
 plot_rx_histogram_by_month <- ggplot(data = filter(wx_sub_countHours, Conditions == "In Prescription"),
                    aes(x = Month, y = Percent, fill = Conditions))+
   scale_y_continuous("Percent of Hours Matching Conditions (by month)",
@@ -52,6 +58,12 @@ plot_rx_histogram_by_month <- ggplot(data = filter(wx_sub_countHours, Conditions
 
 
 # Prescription Plot - Percent of Hours by Month / Day ---------------------
+
+windowCount <- wx_sub_test() %>%
+  filter(Conditions == "Window")
+
+prescriptionCount <- wx_sub_test() %>%
+  filter(Conditions == "In Prescription")
 
 plot_rx_percent_hours_by_month <- ggplot(prescriptionCount, aes(x = Month, y = Day, fill = Percent*100)) + 
   geom_tile(fill = "gray", data = windowCount, aes(Month, Day), size = 0.25, colour = "white")+
