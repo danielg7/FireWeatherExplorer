@@ -25,10 +25,12 @@ logger <- function(textToLog, logFile){
 
 # Read in API Key for Mesowest --------------------------------------------
 
+if(!file.exists(".mesowesttoken")){
 fileName <- 'api_key.txt'
 api_key <- readChar(fileName, file.info(fileName)$size)
 
 mesowest::requestToken(apikey = api_key)
+}
 
 # Read In Station Data ----------------------------------------------------
 
