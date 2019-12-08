@@ -7,9 +7,11 @@ source("RawsDL.R")
 
 # Read in Stations --------------------------------------------------------
 
-AllRAWS <- mesowest::mw('metadata',
-                        network = c(1,2),
-                        status='ACTIVE', complete = TRUE)
+#AllRAWS <- mesowest::mw('metadata',
+ #                       network = c(1,2),
+  #                      status='ACTIVE', complete = TRUE)
+
+load(file="AllRAWS.Rda")
 
 AllLocations <- data.frame("StationName" = AllRAWS$STATION$NAME,
                            "StationID" = AllRAWS$STATION$STID,
