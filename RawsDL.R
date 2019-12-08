@@ -71,7 +71,8 @@ readInWeather <- function(StationID, County, Start, End)
                                     stid = StationID,
                                     start = StartDate_formatted,
                                     end = EndDate_formatted,
-                                    units="ENGLISH")
+                                    units="ENGLISH",
+                                    vars = c("air_temp","relative_humidity","wind_speed","wind_direction","solar_radiation","precip_accum","fuel_moisture"))
   return(downloadedWeather)
 }
 

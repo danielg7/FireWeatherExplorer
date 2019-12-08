@@ -29,7 +29,3 @@ Maintainer: Joshua M. Ulrich <josh.m.ulrich@gmail.com>
 Repository: CRAN
 Date/Publication: 2018-04-13 12:36:34 UTC
 Built: R 3.4.4; ; 2018-04-14 04:24:36 UTC; unix
-RemoteType: cran
-RemoteSha: 0.4-13
-RemoteRepos: structure("https://rweb.crmda.ku.edu/cran/", .Names = "CRAN")
-RemotePkgType: mac.binary.el-capitan
