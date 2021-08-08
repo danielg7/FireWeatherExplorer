@@ -2,6 +2,17 @@ library("curl")
 library("zoo")
 library("firebehavioR")
 
+# Read in API Key for Mesowest --------------------------------------------
+token <<- "d3180529bc8f41a6a359d61a37592fa7"
+# if(!file.exists("~/.mesowesttoken")){
+#   print("Token not found.", quote = F)
+#   
+#   fileName <- 'api_key.txt'
+#   api_key <- readChar(fileName, file.info(fileName)$size)
+#   
+#   mesowest::requestToken(apikey = api_key)
+# }
+
 source("RawsDL.R")
 
 

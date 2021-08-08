@@ -10,6 +10,19 @@
 library("shiny")
 library("leaflet")
 
+# TODO: update token section
+
+# Read in API Key for Mesowest --------------------------------------------
+
+# if(!file.exists("~/.mesowesttoken")){
+#   print("Token not found.", quote = F)
+#   
+#   fileName <- 'api_key.txt'
+#   api_key <- readChar(fileName, file.info(fileName)$size)
+#   
+#   mesowest::requestToken(apikey = api_key)
+# }
+
 # tweaks, a list object to set up multicols for checkboxGroupInput
 tweaks <- 
   list(tags$head(tags$style(HTML("

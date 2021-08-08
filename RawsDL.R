@@ -23,19 +23,14 @@ logger <- function(textToLog, logFile){
   
 }
 
-# Read in API Key for Mesowest --------------------------------------------
 
-if(!file.exists(".mesowesttoken")){
-fileName <- 'api_key.txt'
-api_key <- readChar(fileName, file.info(fileName)$size)
-
-mesowest::requestToken(apikey = api_key)
-}
 
 # Read In Station Data ----------------------------------------------------
 
-readInWeather <- function(StationID, County, Start, End)
+readInWeather <- function(token, StationID, State, County, Start, End)
 {
+  print(Start)
+  print(End)
   #
   # Error catching. Check to make sure start and end are useful.
   #
@@ -64,28 +59,96 @@ readInWeather <- function(StationID, County, Start, End)
   print(paste("Retrieving data for: ", StationID," (",StartDate_formatted,"-",EndDate_formatted, ")", sep = ""), quote = FALSE)
   
   #
-  # Pass variables to mesowest app
+  # Read data
   #
   
-  downloadedWeather <- mesowest::mw(service = 'timeseries',
-                                    stid = StationID,
-                                    start = StartDate_formatted,
-                                    end = EndDate_formatted,
-                                    units="ENGLISH",
-                                    vars = c("air_temp","relative_humidity","wind_speed","wind_direction","solar_radiation","precip_accum","fuel_moisture"))
+  tsCall <- function(token,StationID, State, County, Start, End){
+    #StartDate_formatted <<- paste(Start,"01","01","1200",sep = "")
+    #EndDate_formatted <<- paste(End,"12","12","2300",sep = "")
+    
+    url <- "https://api.synopticdata.com/v2/stations/timeseries?"
+    request <- paste(url,stringr::str_c(paste("stid","=",StationID,sep = ""),
+                                        paste("state","=",State,sep = ""),
+                                        paste("county","=",County,sep = ""),
+                                        paste("start","=",StartDate_formatted,sep = ""),
+                                        paste("end","=",EndDate_formatted,sep = ""),
+                                        # separate by slash (like web URL)
+                                        "obtimezone=local",
+                                        "units=english,speed|mph",
+                                        "precip=1",
+                                        "output=json",
+                                        paste("token","=",token,sep = ""),
+                                        sep = "&"),sep = "")
+    
+    print(paste("Request: ",request))
+    
+    
+    output <- httr::GET(url = request)
+    
+    output <- jsonlite::fromJSON(request,simplifyVector = TRUE)
+    
+    
+    #if(output$status_code != 200)
+    # warning(paste("Error in GET request:",output$status_code))
+    
+    return(output)
+  }  
+  
+  downloadedWeather <- tsCall(token = token,
+                              StationID = StationID,
+                              State = State,
+                              County = County,
+                              Start = StartDate_formatted,
+                              End = EndDate_formatted
+                              )
+    
+  
   return(downloadedWeather)
 }
 
-wxStationMetadata <- function(StationID, Network){
+wxStationMetadata <- function(StationID, token,state){
   #
   # Read in station metadata
   #
   
-  metadata <- mw(service = 'metadata',
-                 stid = StationID,
-                 complete = 1,
-                 network = c(1,2))
-  return(metadata)
+  metadataCall <- function(token,StationID_given,State_given){
+    url <- "https://api.synopticdata.com/v2/stations/metadata?"
+    request <- paste(url,stringr::str_c(paste("token","=",token,sep = ""),
+                                        # separate by slash (like web URL)
+                                        paste("stid",StationID_given,sep="="),
+                                        paste("state",State_given,sep=""),
+                                        "output=json",
+                                        sep = "&"),sep = "")
+    
+    output <- httr::GET(url = request)
+    
+    if(output$status_code != 200)
+      warning(paste("Error in GET request:",output$status_code))
+    
+    return(output)
+  }
+  
+  parseMetadataCall <- function(metadatOutput){
+    cleanedOutput <- jsonlite::fromJSON(txt = rawToChar(metadatOutput$content))
+    return(cleanedOutput)
+  }
+  
+  metadata_output <- metadataCall(token,StationID,state)
+  metadata_cleaned <- parseMetadataCall(metadata_output)
+  metadata_cleaned$STATION$PERIOD_OF_RECORD[1] <- year(ymd_hms(metadata_cleaned$STATION$PERIOD_OF_RECORD[1]))
+  metadata_cleaned$STATION$PERIOD_OF_RECORD[2] <- year(ymd_hms(metadata_cleaned$STATION$PERIOD_OF_RECORD[2]))
+  
+  #metadata_cleaned$STATION$StartYear <- year(ymd_hms(metadata_cleaned$STATION$PERIOD_OF_RECORD[1]))
+  #metadata_cleaned$STATION$EndYear <- year(ymd_hms(metadata_cleaned$STATION$PERIOD_OF_RECORD[2]))
+  
+  
+  print(metadata_cleaned)
+  
+  if(metadata_cleaned$SUMMARY$RESPONSE_MESSAGE == "No stations found for this request."){
+    warning("No stations found for this request. Returning null.")
+    return(NULL)}
+  else
+    return(metadata_cleaned)
 }
 
 fuelMoistureCalc <- function(RH, Temp){
@@ -100,98 +163,139 @@ fuelMoistureCalc <- function(RH, Temp){
   
 }
 
-fxn_weatherCleaner <- function(weatherDB){
+fxn_weatherCleaner <- function(dirtyData){
+  
   FMCMissing <<- FALSE
   
   #
-  # Quick tests of completeness
+  # First we need to check to make sure there's even data to clean.
   #
   
   print("Testing for completeness...", quote = FALSE)
   
-  
-  if(length(weatherDB$STATION$OBSERVATIONS$date_time[[1]]) == 0){
-    stop(paste("No data in this station for this period of record!",
-               StartDate_formatted,"-",
-               EndDate_formatted,sep=""))
-  }
-  
-  
-  if(weatherDB$SUMMARY$NUMBER_OF_OBJECTS == 0){
+  if(length(dirtyData$STATION$OBSERVATIONS$date_time[[1]]) == 0){
     stop("No data in this station for this period of record!")
   }
   
-  if(!"precip_accum_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
+  
+  if(dirtyData$SUMMARY$NUMBER_OF_OBJECTS == 0){
+    stop("No data in this station for this period of record!")
+  }
+  
+  #
+  # Build a working dataframe
+  #
+  
+  print("Getting dimensions...",quote = F)
+  obslength <- length(unlist(dirtyData$STATION$OBSERVATIONS$date_time))
+  collength <- length(names(dirtyData$STATION$OBSERVATIONS))
+  
+  print(paste(obslength,"x",collength),quote = F)
+  
+  print("Done. Creating new df...",quote = F)
+  
+  cleanData <- data.frame(matrix(nrow = obslength, ncol = collength))
+  
+  colnames(cleanData) <- names(dirtyData$STATION$OBSERVATIONS)
+  
+  print("Done. Writing new data...",quote = F)
+  
+  for(i in 1:collength){
+    print(paste("Writing:",colnames(cleanData[i])))
+    if(length(unlist(dirtyData$STATION$OBSERVATIONS[1:obslength,i])) > obslength)
+      cleanData[1:obslength,i] <- rep(NA,obslength)
+    else
+      cleanData[1:obslength,i] <- unlist(dirtyData$STATION$OBSERVATIONS[1:obslength,i])
+  }
+  
+  
+  print("Done. Determining which rainfall data to use...",quote = F)
+  
+  #
+  # Test for which rainfall data to use
+  #
+  
+  if(!"precip_accum_set_1" %in% names(cleanData)){
     print("No rainfall in station data. Checking for other options...", quote = FALSE)
-    if(!"precip_accum_one_hour_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
+    if(!"precip_accum_one_hour_set_1" %in% names(cleanData)){
       print("No other hourly rainfall data found. Printing NAs.", quote = FALSE)
-      rainfall <- rep(NA, length(weatherDB$STATION$OBSERVATIONS$date_time[[1]]))
+      rainfall <- rep(NA, obslength)
     }
-    if("precip_accum_one_hour_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
+    if("precip_accum_one_hour_set_1" %in% names(cleanData)){
       print("Alternative found. Using 'precip_accum_one_hour_set_1'", quote = FALSE)
-      rainfall <- weatherDB$STATION$OBSERVATIONS$precip_accum_one_hour_set_1
+      rainfall <- cleanData$precip_accum_one_hour_set_1
+    }
+    if("precip_accum_set_1" %in% names(cleanData)){
+      print("Alternative found. Using 'precip_accum_set_1'", quote = FALSE)
+      rainfall <- cleanData$precip_accum_set_1
+    }
+    if("precip_accumulated_set_1d" %in% names(cleanData)){
+      print("Alternative found. Using 'precip_accumulated_set_1d'", quote = FALSE)
+      rainfall <- cleanData$precip_accumulated_set_1d
     }
   }
   
-  if("precip_accum_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
-    rainfall <- weatherDB$STATION$OBSERVATIONS$precip_accum_set_1[[1]]
-  }
   
-  print("Passed.", quote = FALSE)
+  #
+  # Populate a standardized dataframe
+  #
   
-  # Populate dataframe
   
-  if("fuel_moisture_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
-    newWxDF <- data.frame("Date_Time" = weatherDB$STATION$OBSERVATIONS$date_time[[1]],
-                          "FuelMoisture_10hr" = weatherDB$STATION$OBSERVATIONS$fuel_moisture_set_1,
-                          "Wind_Direction" = weatherDB$STATION$OBSERVATIONS$wind_cardinal_direction_set_1d,
-                          "Wind_Speed" = weatherDB$STATION$OBSERVATIONS$wind_speed_set_1,
-                          "Temp" = weatherDB$STATION$OBSERVATIONS$air_temp_set_1,
-                          "RH" = weatherDB$STATION$OBSERVATIONS$relative_humidity_set_1,
-                          "SolarRad" = weatherDB$STATION$OBSERVATIONS$solar_radiation_set_1[[1]],
+  
+  if("fuel_moisture_set_1" %in% names(cleanData)){
+    newWxDF <- data.frame("Date_Time" = cleanData$date_time,
+                          "FuelMoisture_10hr" = cleanData$fuel_moisture_set_1,
+                          "Wind_Direction" = cleanData$wind_cardinal_direction_set_1d,
+                          "Wind_Speed" = cleanData$wind_speed_set_1,
+                          "Temp" = cleanData$air_temp_set_1,
+                          "RH" = cleanData$relative_humidity_set_1,
+                          "SolarRad" = cleanData$solar_radiation_set_1[[1]],
                           "PrecipAccumulation" = rainfall)
     names(newWxDF) <- c("DateTime","FuelMoisture_10hr","Wind_Direction","Wind_Speed","Temp","RH","SolarRad","PrecipAccumulation")
   }
   
   
-  if(!"fuel_moisture_set_1" %in% names(weatherDB$STATION$OBSERVATIONS) & "solar_radiation_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
+  if(!"fuel_moisture_set_1" %in% names(cleanData) & "solar_radiation_set_1" %in% names(cleanData)){
     print("No fuel moisture in this dataset!", quote = FALSE)
     FMCMissing <<- TRUE
     
-    newWxDF <- data.frame("Date_Time" = weatherDB$STATION$OBSERVATIONS$date_time[[1]],
+    newWxDF <- data.frame("Date_Time" = cleanData$date_time,
                           "FuelMoisture_10hr" = NA,
-                          "Wind_Direction" = weatherDB$STATION$OBSERVATIONS$wind_cardinal_direction_set_1d,
-                          "Wind_Speed" = weatherDB$STATION$OBSERVATIONS$wind_speed_set_1,
-                          "Temp" = weatherDB$STATION$OBSERVATIONS$air_temp_set_1,
-                          "RH" = weatherDB$STATION$OBSERVATIONS$relative_humidity_set_1,
-                          "SolarRad" = weatherDB$STATION$OBSERVATIONS$solar_radiation_set_1[[1]],
+                          "Wind_Direction" = cleanData$wind_cardinal_direction_set_1d,
+                          "Wind_Speed" = cleanData$wind_speed_set_1,
+                          "Temp" = cleanData$air_temp_set_1,
+                          "RH" = cleanData$relative_humidity_set_1,
+                          "SolarRad" = cleanData$solar_radiation_set_1[[1]],
                           "PrecipAccumulation" = rainfall)
     names(newWxDF) <- c("DateTime","FuelMoisture_10hr","Wind_Direction","Wind_Speed","Temp","RH","SolarRad","PrecipAccumulation")
   }
   
-  if(!"fuel_moisture_set_1" %in% names(weatherDB$STATION$OBSERVATIONS) & !"solar_radiation_set_1" %in% names(weatherDB$STATION$OBSERVATIONS)){
+  if(!"fuel_moisture_set_1" %in% names(cleanData) & !"solar_radiation_set_1" %in% names(cleanData)){
     
     print("No fuel moisture in this dataset!", quote = FALSE)
     FMCMissing <<- TRUE
     
-    newWxDF <- data.frame("Date_Time" = weatherDB$STATION$OBSERVATIONS$date_time[[1]],
+    newWxDF <- data.frame("Date_Time" = cleanData$date_time,
                           "FuelMoisture_10hr" = NA,
-                          "Wind_Direction" = weatherDB$STATION$OBSERVATIONS$wind_cardinal_direction_set_1d,
-                          "Wind_Speed" = weatherDB$STATION$OBSERVATIONS$wind_speed_set_1,
-                          "Temp" = weatherDB$STATION$OBSERVATIONS$air_temp_set_1,
-                          "RH" = weatherDB$STATION$OBSERVATIONS$relative_humidity_set_1,
+                          "Wind_Direction" = cleanData$wind_cardinal_direction_set_1d,
+                          "Wind_Speed" = cleanData$wind_speed_set_1,
+                          "Temp" = cleanData$air_temp_set_1,
+                          "RH" = cleanData$relative_humidity_set_1,
                           "SolarRad" = NA,
                           "HourlyRainfall" = rainfall)
     names(newWxDF) <- c("DateTime","FuelMoisture_10hr","Wind_Direction","Wind_Speed","Temp","RH","SolarRad","HourlyRainfall")
   }
   
-  
-  
   # Clean Data
   
   print("Cleaning data...", quote = FALSE)
   
+  print("Setting RH to numeric...", quote = FALSE)
+  
   newWxDF$RH <- as.numeric(as.character(newWxDF$RH))
+  
+  print("Done. Calculating fuel moistures...", quote = FALSE)
+  
   
   #
   # Calculating fuel moistures fuel moistures
@@ -213,7 +317,9 @@ fxn_weatherCleaner <- function(weatherDB){
   
   newWxDF$DateTime <- ymd_hms(newWxDF$DateTime, tz = "UTC")
   
-  attributes(newWxDF$DateTime)$tzone <-  weatherDB$STATION$TIMEZONE  
+  #attributes(newWxDF$DateTime)$tzone <-  weatherDB$STATION$TIMEZONE  
+  
+  newWxDF$DateTime <- lubridate::with_tz(newWxDF$DateTime, dirtyData$STATION$TIMEZONE)
   
   newWxDF$Hour <- lubridate::hour(newWxDF$DateTime)
   newWxDF$Month <- lubridate::month(newWxDF$DateTime)

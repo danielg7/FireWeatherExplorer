@@ -16,6 +16,8 @@ library("hms")
 library("testthat")
 #library("highcharter")
 
+
+
 source("./global.R")
 
 
@@ -140,7 +142,7 @@ server <- function(input, output, session) {
       selectInput(inputId = "County",
                   label = "Select County",
                   choices = County_List,
-                  selected = County_List[1])
+                  selected = County_List[2])
       
     })
     output$station <- renderUI({
@@ -294,7 +296,12 @@ server <- function(input, output, session) {
         # Pass stationID and parsed dates to the readInWeather function (see RawsDL.R for more)
         #
         
-        wx_dl <<- readInWeather(StationID = StationID,
+        # TODO: Update call from here
+        
+        wx_dl <<- readInWeather(token = token,
+                                StationID = StationID,
+                                State = input$State,
+                                County = input$County,
                                 Start = input$Year[1],
                                 End = input$Year[2])
         
@@ -750,7 +757,12 @@ server <- function(input, output, session) {
     
     print("Fetching station metadata...",quote = FALSE)
     
-    stationMetadata <<- wxStationMetadata(StationID = StationID)
+    stationMetadata <<- wxStationMetadata(token = token, StationID = StationID,state = input$State)
+    
+    print("Returned data:")
+    print(stationMetadata)
+    print(str(stationMetadata))
+    print(stationMetadata$STATION$PERIOD_OF_RECORD)
     
     print("Done.",quote = FALSE)
     
@@ -801,17 +813,17 @@ server <- function(input, output, session) {
     output$POR <- renderUI({
       sliderInput(label = 'Select Period of Record',
                   inputId = "Year",
-                  min = min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
-                  max = max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
-                  value = c(min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD)))+1,
-                            max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD)))),
+                  min = min(stationMetadata$STATION$PERIOD_OF_RECORD),
+                  max = max(stationMetadata$STATION$PERIOD_OF_RECORD),
+                  value = c(min(stationMetadata$STATION$PERIOD_OF_RECORD)+1,
+                            max(stationMetadata$STATION$PERIOD_OF_RECORD)),
                   sep = "")
     })
     
     
     
     
-  }) 
+  })
   
   observeEvent(input$station_location_marker_click, {
     click <- input$station_location_marker_click
@@ -835,7 +847,7 @@ server <- function(input, output, session) {
     
     print(paste("Redefined stationID from click:",StationID,sep = " "))
     
-    stationMetadata <<- wxStationMetadata(StationID = StationID)
+    stationMetadata <<- wxStationMetadata(token = token, StationID = StationID, state=input$State)
     
     County_List <- sort(as.character(unique(AllRAWS$STATION$COUNTY[which(AllRAWS$STATION$STATE == ClickedStationState)])))
     
@@ -854,11 +866,13 @@ server <- function(input, output, session) {
     updateSliderInput(session = session,
                       label = 'Select Period of Record',
                       inputId = "Year",
-                      min = min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
-                      max = max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD))),
-                      value = c(round(min(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD)))+1),
-                                max(year(ymd_hms(stationMetadata$STATION$PERIOD_OF_RECORD)))))
-  })
+                      min = min(stationMetadata$STATION$PERIOD_OF_RECORD),
+                      max = max(stationMetadata$STATION$PERIOD_OF_RECORD),
+                      value = c(min(stationMetadata$STATION$PERIOD_OF_RECORD)+1,
+                                max(stationMetadata$STATION$PERIOD_OF_RECORD)))
+
+    
+    })
   
   observe({
     if(input$selectall == 0) return(NULL) 
